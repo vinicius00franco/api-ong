@@ -10,7 +10,6 @@ const describeIfDb = process.env.DATABASE_URL ? describe : describe.skip;
 
 describeIfDb('Products integration (real DB)', () => {
   let app: INestApplication;
-  let client: any; // Dedicated client for transactions
 
   beforeAll(async () => {
     // quick connectivity check; if fails, skip
@@ -43,22 +42,6 @@ describeIfDb('Products integration (real DB)', () => {
 
   afterAll(async () => {
     if (app) await app.close();
-  });
-
-  beforeEach(async () => {
-    // Start a transaction for each test
-    client = await pool.connect();
-    await client.query('BEGIN');
-    // Override the pool in the app to use the transactional client
-    // Note: This is a simplification; in practice, you might need to inject a client or use a test-specific pool
-  });
-
-  afterEach(async () => {
-    // Rollback the transaction after each test
-    if (client) {
-      await client.query('ROLLBACK');
-      client.release();
-    }
   });
 
   it('should create a product with valid category_id', async () => {
