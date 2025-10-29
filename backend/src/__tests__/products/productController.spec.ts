@@ -58,6 +58,13 @@ describe('ProductController (e2e)', () => {
         stock_qty: 100,
         weight_grams: 500,
       };
+      (productService.create as jest.Mock).mockResolvedValue({
+        id: '1',
+        ...createDto,
+        organization_id: 'org1',
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
       return request(app.getHttpServer())
         .post('/products')
         .send(createDto)

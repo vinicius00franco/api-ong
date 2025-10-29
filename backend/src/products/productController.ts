@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, UsePipes } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { AuthGuard } from '../middleware/authMiddleware';
 import { ZodValidationPipe } from '../lib/zodValidationPipe';
 import { ProductService } from './productService';
@@ -11,8 +11,10 @@ export class ProductController {
   constructor(private productService: ProductService) {}
 
   @Post()
-  @UsePipes(new ZodValidationPipe(createProductSchema))
-  async create(@Body() createProductInput: CreateProductInput, @Request() req: any): Promise<Product> {
+  async create(
+    @Body(new ZodValidationPipe(createProductSchema)) createProductInput: CreateProductInput,
+    @Request() req: any,
+  ): Promise<Product> {
     return this.productService.create(createProductInput, req.organizationId);
   }
 
@@ -27,8 +29,11 @@ export class ProductController {
   }
 
   @Put(':id')
-  @UsePipes(new ZodValidationPipe(updateProductSchema))
-  async update(@Param('id') id: string, @Body() updateProductInput: UpdateProductInput, @Request() req: any): Promise<Product> {
+  async update(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateProductSchema)) updateProductInput: UpdateProductInput,
+    @Request() req: any,
+  ): Promise<Product> {
     return this.productService.update(id, req.organizationId, updateProductInput);
   }
 
