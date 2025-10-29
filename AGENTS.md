@@ -23,6 +23,42 @@ src/
 └── lib/          # Utilitários puros
 ```
 
+### Backend NestJS: estrutura por feature (obrigatório)
+- Em `backend/src`, organize por feature (ex.: `auth/`, `products/`, `orders/`).
+- Dentro de cada feature, separe por camadas em ARQUIVOS (não crie subpastas `controllers/`, `services/`, `repositories/`).
+- Nomeação padronizada por arquivo:
+	- `authController.ts`, `authService.ts`, `authRepository.ts`, `authSchemas.ts` (Zod), `authTypes.ts`
+	- Interfaces com prefixo `I` no mesmo arquivo quando fizer sentido (ex.: `IAuthRepository`).
+- Evite barrels desnecessários; `index.ts` por feature é opcional e só para reexport controlado.
+- Testes da feature ficam em `src/__tests__/<feature>/...` seguindo TDD.
+
+Exemplo:
+```
+backend/
+	src/
+		auth/
+			authController.ts
+			authService.ts
+			authRepository.ts
+			authSchemas.ts
+			authTypes.ts
+		products/
+			productController.ts
+			productService.ts
+			productRepository.ts
+			productSchemas.ts
+		middleware/
+			authMiddleware.ts
+		lib/
+		types/
+```
+
+Regras importantes para NestJS:
+- Controllers expõem rotas HTTP, Services concentram regras de negócio, Repositories isolam acesso a dados.
+- Injete abstrações (ex.: `IProductRepository`) via providers do Nest; implementações concretas ficam próximas da feature.
+- Multi-tenancy: todos os repositories devem receber `organizationId` (do middleware/auth) e filtrar queries por organização.
+- Validação: use Zod nos `*Schemas.ts` da própria feature antes de chamar o service.
+
 ## 🔒 Multi-tenancy Crítico
 - **organizationId**: Sempre no JWT e queries
 - **Middleware auth**: Extrai e injeta organizationId
