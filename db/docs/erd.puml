@@ -1,0 +1,66 @@
+@startuml ER Diagram ONG API
+
+entity organizations {
+  * id : SERIAL <<PK>>
+  --
+  * name : VARCHAR(255)
+  * email : VARCHAR(255) <<UQ>>
+  * password_hash : VARCHAR(255)
+  created_at : TIMESTAMP
+}
+
+entity categories {
+  * id : SERIAL <<PK>>
+  --
+  * name : VARCHAR(255) <<UQ>>
+  created_at : TIMESTAMP
+}
+
+entity customers {
+  * id : SERIAL <<PK>>
+  --
+  name : VARCHAR(255)
+  email : VARCHAR(255) <<UQ>>
+  created_at : TIMESTAMP
+}
+
+entity products {
+  * id : SERIAL <<PK>>
+  --
+  * name : VARCHAR(255)
+  description : TEXT
+  * price : DECIMAL(10,2)
+  category_id : INTEGER <<FK>>
+  image_url : VARCHAR(500)
+  * stock_qty : INTEGER
+  weight_grams : INTEGER
+  * organization_id : INTEGER <<FK>>
+  created_at : TIMESTAMP
+}
+
+entity orders {
+  * id : SERIAL <<PK>>
+  --
+  customer_id : INTEGER <<FK>>
+  created_at : TIMESTAMP
+}
+
+entity order_items {
+  * id : SERIAL <<PK>>
+  --
+  * order_id : INTEGER <<FK>>
+  * product_id : INTEGER <<FK>>
+  * quantity : INTEGER
+  * price_at_time : DECIMAL(10,2)
+  organization_id : INTEGER <<FK>>
+  created_at : TIMESTAMP
+}
+
+organizations ||--o{ products : "organization_id"
+categories ||--o{ products : "category_id"
+customers ||--o{ orders : "customer_id"
+orders ||--|{ order_items : "order_id"
+products ||--o{ order_items : "product_id"
+organizations ||--o{ order_items : "organization_id"
+
+@enduml
