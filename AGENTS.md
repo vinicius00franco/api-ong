@@ -53,7 +53,11 @@ SELECT * FROM products WHERE id = $1 AND organization_id = $2
 
 ## 🌿 Gestão de Branches
 - **Toda alteração**: Nova branch da branch atual
-- **Nomenclatura descritiva**: `feature/auth-jwt`, `fix/product-validation`, `refactor/clean-architecture`
+- **Padrões obrigatórios**: 
+  - `feat/` - Novas funcionalidades
+  - `refact/` - Refatorações de código
+  - `fix/` - Correções de bugs
+- **Nomenclatura descritiva**: `feat/auth-jwt`, `fix/product-validation`, `refact/clean-architecture`
 - **Contexto claro**: Nome deve explicar o que foi alterado
 - **Separação**: Cada mudança em sua própria branch para rastreabilidade
 
