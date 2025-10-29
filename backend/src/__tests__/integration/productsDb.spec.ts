@@ -4,6 +4,7 @@ import * as request from 'supertest';
 import { ProductModule } from '../../products/productModule';
 import { AuthGuard } from '../../middleware/authMiddleware';
 import { pool } from '../../lib/database';
+import { withDbClient } from '../../lib/dbContext';
 
 // Run these only when a real DB URL is available
 const describeIfDb = process.env.DATABASE_URL ? describe : describe.skip;
@@ -44,6 +45,22 @@ describeIfDb('Products integration (real DB)', () => {
     if (app) await app.close();
   });
 
+  let client: any;
+
+  beforeEach(async () => {
+    client = await pool.connect();
+    await client.query('BEGIN');
+  });
+
+  afterEach(async () => {
+    try {
+      await client.query('ROLLBACK');
+    } finally {
+      client.release();
+      client = null;
+    }
+  });
+
   it('should create a product with valid category_id', async () => {
     const createDto = {
       name: 'DB Test Product',
@@ -55,10 +72,9 @@ describeIfDb('Products integration (real DB)', () => {
       weight_grams: 200,
     };
 
-    const res = await request(app.getHttpServer())
-      .post('/products')
-      .send(createDto)
-      .expect(201);
+    const res = await withDbClient(client, () =>
+      request(app.getHttpServer()).post('/products').send(createDto).expect(201),
+    );
 
     expect(res.body).toHaveProperty('id');
     expect(res.body.category_id).toBe(1);
@@ -76,10 +92,9 @@ describeIfDb('Products integration (real DB)', () => {
       weight_grams: 100,
     };
 
-    const res = await request(app.getHttpServer())
-      .post('/products')
-      .send(createDto)
-      .expect(400);
+    const res = await withDbClient(client, () =>
+      request(app.getHttpServer()).post('/products').send(createDto).expect(400),
+    );
 
     expect(res.body.message).toContain('Invalid category_id');
   });
