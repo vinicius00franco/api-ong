@@ -6,7 +6,7 @@ import { IProductRepository, Product, CreateProductRequest, UpdateProductRequest
 export class ProductRepository implements IProductRepository {
   async create(product: CreateProductRequest & { organization_id: string }): Promise<Product> {
     const query = `
-      INSERT INTO products (name, description, price, category, image_url, stock_qty, weight_grams, organization_id)
+      INSERT INTO products (name, description, price, category_id, image_url, stock_qty, weight_grams, organization_id)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
     `;
@@ -14,7 +14,7 @@ export class ProductRepository implements IProductRepository {
       product.name,
       product.description,
       product.price,
-      product.category,
+      product.category_id,
       product.image_url,
       product.stock_qty,
       product.weight_grams,
@@ -53,7 +53,7 @@ export class ProductRepository implements IProductRepository {
 
     const query = `
       UPDATE products
-      SET ${fields.join(', ')}, updated_at = NOW()
+      SET ${fields.join(', ')}
       WHERE id = $${paramIndex} AND organization_id = $${paramIndex + 1}
       RETURNING *
     `;

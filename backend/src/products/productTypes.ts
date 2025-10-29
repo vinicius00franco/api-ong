@@ -3,20 +3,19 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  category: string;
+  category_id: number;
   image_url: string;
   stock_qty: number;
   weight_grams: number;
   organization_id: string;
   created_at: Date;
-  updated_at: Date;
 }
 
 export interface CreateProductRequest {
   name: string;
   description: string;
   price: number;
-  category: string;
+  category_id: number;
   image_url: string;
   stock_qty: number;
   weight_grams: number;
@@ -26,7 +25,7 @@ export interface UpdateProductRequest {
   name?: string;
   description?: string;
   price?: number;
-  category?: string;
+  category_id?: number;
   image_url?: string;
   stock_qty?: number;
   weight_grams?: number;

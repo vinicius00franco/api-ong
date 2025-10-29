@@ -37,13 +37,13 @@ describe('ProductService', () => {
         name: 'Test Product',
         description: 'Description',
         price: 10.99,
-        category: 'Category',
+        category_id: 1,
         image_url: 'http://example.com/image.jpg',
         stock_qty: 100,
         weight_grams: 500,
       };
       const organizationId = 'org1';
-      const createdProduct = { ...createRequest, id: '1', organization_id: organizationId, created_at: new Date(), updated_at: new Date() };
+      const createdProduct = { ...createRequest, id: '1', organization_id: organizationId, created_at: new Date() };
 
       productRepository.create.mockResolvedValue(createdProduct);
 
@@ -62,13 +62,12 @@ describe('ProductService', () => {
         name: 'Product 1',
         description: 'Desc',
         price: 10,
-        category: 'Cat',
+        category_id: 1,
         image_url: 'url',
         stock_qty: 1,
         weight_grams: 1,
         organization_id: organizationId,
         created_at: new Date(),
-        updated_at: new Date(),
       }];
 
       productRepository.findAll.mockResolvedValue(products);
@@ -89,13 +88,12 @@ describe('ProductService', () => {
         name: 'Product 1',
         description: 'Desc',
         price: 10,
-        category: 'Cat',
+        category_id: 1,
         image_url: 'url',
         stock_qty: 1,
         weight_grams: 1,
         organization_id: organizationId,
         created_at: new Date(),
-        updated_at: new Date(),
       };
 
       productRepository.findById.mockResolvedValue(product);
@@ -126,13 +124,12 @@ describe('ProductService', () => {
         name: 'Updated Name',
         description: 'Desc',
         price: 10,
-        category: 'Cat',
+        category_id: 1,
         image_url: 'url',
         stock_qty: 1,
         weight_grams: 1,
         organization_id: organizationId,
         created_at: new Date(),
-        updated_at: new Date(),
       };
 
       productRepository.update.mockResolvedValue(updatedProduct);

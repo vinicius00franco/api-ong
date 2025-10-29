@@ -53,7 +53,7 @@ describe('ProductController (e2e)', () => {
         name: 'Test Product',
         description: 'Description',
         price: 10.99,
-        category: 'Category',
+        category_id: 1,
         image_url: 'http://example.com/image.jpg',
         stock_qty: 100,
         weight_grams: 500,
@@ -63,7 +63,6 @@ describe('ProductController (e2e)', () => {
         ...createDto,
         organization_id: 'org1',
         created_at: new Date(),
-        updated_at: new Date(),
       });
       return request(app.getHttpServer())
         .post('/products')
@@ -102,7 +101,7 @@ describe('ProductController (e2e)', () => {
 
   describe('/products/:id (GET)', () => {
     it('should return product by id', () => {
-      const product = { id: '1', name: 'Product 1', organization_id: 'org1' };
+      const product = { id: '1', name: 'Product 1', organization_id: 'org1', category_id: 1 };
 
       (productService.findById as jest.Mock).mockResolvedValue(product);
 

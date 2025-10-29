@@ -29,7 +29,7 @@ describe('ProductRepository', () => {
         name: 'Test Product',
         description: 'Description',
         price: 10.99,
-        category: 'Category',
+        category_id: 1,
         image_url: 'http://example.com/image.jpg',
         stock_qty: 100,
         weight_grams: 500,
@@ -46,6 +46,9 @@ describe('ProductRepository', () => {
         expect.stringContaining('INSERT INTO products'),
         expect.any(Array)
       );
+      // Ensure we are inserting category_id, not category
+      const [sql] = (pool.query as jest.Mock).mock.calls[0];
+      expect(sql).toContain('(name, description, price, category_id, image_url, stock_qty, weight_grams, organization_id)');
     });
   });
 
@@ -111,6 +114,9 @@ describe('ProductRepository', () => {
         expect.stringContaining('UPDATE products'),
         expect.any(Array)
       );
+      // Ensure updated_at is not referenced since schema doesn't have it
+      const [updateSql] = (pool.query as jest.Mock).mock.calls.slice(-1)[0];
+      expect(updateSql).not.toContain('updated_at');
     });
 
     it('should return null if no fields to update', async () => {
