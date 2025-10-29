@@ -16,7 +16,7 @@ Criar a fundação técnica do projeto, permitindo que todos os serviços rodem 
 * **RF-SYS-03:** Script de Seed (mínimo 2 ONGs, 5 produtos cada).
 
 ### Tarefas / Histórias
-* **Infra:** Configurar `docker-compose.yml` com os três serviços: `db` (PostgreSQL), `backend` (Next.js) e `llm-api` (FastAPI).
+* **Infra:** Configurar `docker-compose.yml` com os três serviços: `db` (PostgreSQL), `backend` (NestJS) e `llm-api` (FastAPI).
 * **Infra:** Criar o `Dockerfile` para o backend.
 * **Infra:** Criar o `Dockerfile` para o `llm-api`.
 * **DB:** Escrever o script de migração `001_schema.sql` (ou equivalente) para criar todas as tabelas.
@@ -44,7 +44,7 @@ Permitir que uma ONG se autentique e gerencie apenas os seus próprios produtos 
 ### Tarefas / Histórias
 * **História (Auth):** Como usuário (ONG), quero me autenticar via endpoint de login para receber um token JWT.
 * **História (CRUD):** Como usuário (ONG), quero poder Criar, Ler, Atualizar e Deletar produtos, preenchendo todos os campos obrigatórios.
-* **Tarefa (Segurança):** Implementar middleware de segurança (ex: `withAuth`) no Next.js que:
+* **Tarefa (Segurança):** Implementar middleware de segurança (ex: `withAuth`) no NestJS que:
     * Valida o token JWT.
     * Extrai o `organization_id` de dentro do token.
     * Garante que todas as queries (SELECT, INSERT, UPDATE, DELETE) usem apenas esse `organization_id`.
@@ -76,9 +76,9 @@ Implementar uma busca em linguagem natural que seja resiliente a falhas.
 * **RN-SRCH-01:** Definir um timeout razoável para a chamada ao LLM.
 
 ### Tarefas / Histórias
-* **História (Microserviço):** Como serviço backend (Next.js), quero enviar um texto para o `llm-api` (FastAPI) e receber um JSON de filtros estruturados.
+* **História (Microserviço):** Como serviço backend (NestJS), quero enviar um texto para o `llm-api` (FastAPI) e receber um JSON de filtros estruturados.
 * **História (Orquestração):** Como visitante, quero digitar "doces até 50 reais" e ver os resultados, mesmo que a IA falhe.
-* **Sub-Tarefa (Next.js):** Implementar a lógica de orquestração:
+* **Sub-Tarefa (NestJS):** Implementar a lógica de orquestração:
     * Chamar o `llm-api` com um timeout (ex: 3 segundos).
     * Se falhar ou demorar, executar a busca fallback (ex: ILIKE no nome/descrição).
     * Retornar os resultados e a "interpretação aplicada" (ex: "Buscando por: Categoria=Doces" ou "Buscando por texto: doces").
@@ -97,7 +97,7 @@ Persistir um registro do pedido no banco de dados, sem lógica de estoque (Etapa
 
 ### Tarefas / Histórias
 * **História (Pedido):** Como visitante, quero enviar meu "carrinho" (lista de IDs de produto e quantidades) para um endpoint e ter meu pedido salvo.
-* **Tarefa (Transação):** Implementar o endpoint `POST /api/public/orders` (Next.js) usando uma transação SQL para:
+* **Tarefa (Transação):** Implementar o endpoint `POST /api/public/orders` (NestJS) usando uma transação SQL para:
     * Inserir o registro na tabela `orders`.
     * Iterar pelos itens, buscar o `price` e `organization_id` atuais do produto.
     * Inserir os registros na tabela `order_items` com os dados buscados.
@@ -132,7 +132,7 @@ Garantir que o sistema seja observável e que a documentação atenda aos requis
     * **RF-DOC-04.5:** Detalhes dos Logs (como visualizar e formato).
 
 ### Tarefas / Histórias
-* **Tarefa (Logs):** Implementar middleware de log (Next.js) para capturar e formatar logs gerais em JSON (Cobrem RF-SYS-04, RF-SYS-05).
+* **Tarefa (Logs):** Implementar middleware de log (NestJS) para capturar e formatar logs gerais em JSON (Cobrem RF-SYS-04, RF-SYS-05).
 * **Tarefa (Logs):** Adicionar log customizado no endpoint de Busca (`/api/public/search`) para registrar os campos específicos da IA e do fallback (Cobre RF-SYS-06).
 * **Tarefa (Doc):** Escrever o `README.md` final, garantindo que todos os sub-requisitos RF-DOC-04.1 a RF-DOC-04.5 sejam atendidos.
 * **Tarefa (Config):** Criar o arquivo `.env.example` final (Cobre RF-DOC-03).

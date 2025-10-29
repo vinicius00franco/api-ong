@@ -77,6 +77,7 @@ SELECT * FROM products WHERE id = $1 AND organization_id = $2
 - **Integration**: APIs com DB real
 - **Factories**: Dados de teste reutilizáveis
 - **Cleanup**: Estado limpo entre testes
+- **Dados seguros**: Testes não devem ter configurações padrão ou atribuições com dados sensíveis. Use null, string vazia ou valores adequados ao contexto
 
 ## 📊 Logs Estruturados JSON
 ```typescript
