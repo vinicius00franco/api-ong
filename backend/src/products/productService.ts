@@ -1,12 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ProductRepository } from './productRepository';
 import { Product, CreateProductRequest, UpdateProductRequest } from './productTypes';
+import { CategoryRepository } from '../categories/categoryRepository';
 
 @Injectable()
 export class ProductService {
-  constructor(private productRepository: ProductRepository) {}
+  constructor(
+    private productRepository: ProductRepository,
+    private categoryRepository: CategoryRepository,
+  ) {}
 
   async create(product: CreateProductRequest, organizationId: string): Promise<Product> {
+    if (!(await this.categoryRepository.exists(product.category_id))) {
+      throw new BadRequestException('Invalid category_id');
+    }
     return this.productRepository.create({ ...product, organization_id: organizationId });
   }
 
@@ -23,6 +30,11 @@ export class ProductService {
   }
 
   async update(id: string, organizationId: string, updates: UpdateProductRequest): Promise<Product> {
+    if (updates.category_id !== undefined) {
+      if (!(await this.categoryRepository.exists(updates.category_id))) {
+        throw new BadRequestException('Invalid category_id');
+      }
+    }
     const product = await this.productRepository.update(id, organizationId, updates);
     if (!product) {
       throw new NotFoundException('Product not found');

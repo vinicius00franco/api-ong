@@ -3,10 +3,12 @@ import { ProductService } from '../../products/productService';
 import { ProductRepository } from '../../products/productRepository';
 import { CreateProductRequest, UpdateProductRequest } from '../../products/productTypes';
 import { NotFoundException } from '@nestjs/common';
+import { CategoryRepository } from '../../categories/categoryRepository';
 
 describe('ProductService', () => {
   let service: ProductService;
   let productRepository: jest.Mocked<ProductRepository>;
+  let categoryRepository: jest.Mocked<CategoryRepository>;
 
   beforeEach(async () => {
     const mockProductRepository = {
@@ -16,6 +18,10 @@ describe('ProductService', () => {
       update: jest.fn(),
       delete: jest.fn(),
     };
+    const mockCategoryRepository = {
+      findAll: jest.fn(),
+      exists: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -24,11 +30,16 @@ describe('ProductService', () => {
           provide: ProductRepository,
           useValue: mockProductRepository,
         },
+        {
+          provide: CategoryRepository,
+          useValue: mockCategoryRepository,
+        },
       ],
     }).compile();
 
     service = module.get<ProductService>(ProductService);
     productRepository = module.get(ProductRepository);
+  categoryRepository = module.get(CategoryRepository);
   });
 
   describe('create', () => {
@@ -45,12 +56,31 @@ describe('ProductService', () => {
       const organizationId = 'org1';
       const createdProduct = { ...createRequest, id: '1', organization_id: organizationId, created_at: new Date() };
 
-      productRepository.create.mockResolvedValue(createdProduct);
+  categoryRepository.exists.mockResolvedValue(true);
+  productRepository.create.mockResolvedValue(createdProduct);
 
       const result = await service.create(createRequest, organizationId);
 
       expect(result).toEqual(createdProduct);
       expect(productRepository.create).toHaveBeenCalledWith({ ...createRequest, organization_id: organizationId });
+    });
+
+    it('should throw BadRequest for invalid category_id', async () => {
+      const createRequest: CreateProductRequest = {
+        name: 'Test Product',
+        description: 'Description',
+        price: 10.99,
+        category_id: 99999,
+        image_url: 'http://example.com/image.jpg',
+        stock_qty: 100,
+        weight_grams: 500,
+      };
+      const organizationId = 'org1';
+      categoryRepository.exists.mockResolvedValue(false);
+
+      await expect(service.create(createRequest, organizationId)).rejects.toThrow('Invalid category_id');
+      expect(categoryRepository.exists).toHaveBeenCalledWith(99999);
+      expect(productRepository.create).not.toHaveBeenCalled();
     });
   });
 
@@ -132,12 +162,24 @@ describe('ProductService', () => {
         created_at: new Date(),
       };
 
-      productRepository.update.mockResolvedValue(updatedProduct);
+  categoryRepository.exists.mockResolvedValue(true);
+  productRepository.update.mockResolvedValue(updatedProduct);
 
       const result = await service.update(id, organizationId, updates);
 
       expect(result).toEqual(updatedProduct);
       expect(productRepository.update).toHaveBeenCalledWith(id, organizationId, updates);
+    });
+
+    it('should throw BadRequest on update with invalid category_id', async () => {
+      const id = '1';
+      const organizationId = 'org1';
+      const updates: UpdateProductRequest = { category_id: 99999 };
+      categoryRepository.exists.mockResolvedValue(false);
+
+      await expect(service.update(id, organizationId, updates)).rejects.toThrow('Invalid category_id');
+      expect(categoryRepository.exists).toHaveBeenCalledWith(99999);
+      expect(productRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if update fails', async () => {
