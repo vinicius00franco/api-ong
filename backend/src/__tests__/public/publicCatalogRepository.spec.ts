@@ -45,7 +45,7 @@ describe('PublicCatalogRepository', () => {
       // Assert
       expect(result).toEqual(mockProducts);
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT * FROM products'),
+        expect.stringContaining('FROM products p'),
         [10, 0]
       );
     });
@@ -78,7 +78,7 @@ describe('PublicCatalogRepository', () => {
       // Assert
       expect(result).toEqual(mockProducts);
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE category = $1'),
+        expect.stringContaining('WHERE c.name = $1'),
         ['Doces', 10, 0]
       );
     });
@@ -112,7 +112,7 @@ describe('PublicCatalogRepository', () => {
       // Assert
       expect(result).toEqual(mockProducts);
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE price >= $1 AND price <= $2'),
+        expect.stringContaining('WHERE p.price >= $1 AND p.price <= $2'),
         [5, 15, 10, 0]
       );
     });
@@ -147,7 +147,7 @@ describe('PublicCatalogRepository', () => {
       // Assert
       expect(result).toEqual(mockProducts);
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE category = $1 AND price >= $2 AND price <= $3'),
+        expect.stringContaining('WHERE c.name = $1 AND p.price >= $2 AND p.price <= $3'),
         ['Doces', 5, 15, 10, 0]
       );
     });
@@ -182,7 +182,7 @@ describe('PublicCatalogRepository', () => {
 
       // Assert
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE price >= $1'),
+        expect.stringContaining('WHERE p.price >= $1'),
         [5, 10, 0]
       );
     });
@@ -200,7 +200,7 @@ describe('PublicCatalogRepository', () => {
 
       // Assert
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE price <= $1'),
+        expect.stringContaining('WHERE p.price <= $1'),
         [15, 10, 0]
       );
     });
@@ -217,7 +217,7 @@ describe('PublicCatalogRepository', () => {
       // Assert
       expect(result).toBe(100);
       expect(mockPool.query).toHaveBeenCalledWith(
-        'SELECT COUNT(*) FROM products',
+        expect.stringContaining('SELECT COUNT(*) FROM products p LEFT JOIN categories c ON p.category_id = c.id'),
         []
       );
     });
@@ -234,7 +234,7 @@ describe('PublicCatalogRepository', () => {
       // Assert
       expect(result).toBe(10);
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE category = $1'),
+        expect.stringContaining('WHERE c.name = $1'),
         ['Doces']
       );
     });
@@ -252,7 +252,7 @@ describe('PublicCatalogRepository', () => {
       // Assert
       expect(result).toBe(5);
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE price >= $1 AND price <= $2'),
+        expect.stringContaining('WHERE p.price >= $1 AND p.price <= $2'),
         [5, 15]
       );
     });
@@ -271,7 +271,7 @@ describe('PublicCatalogRepository', () => {
       // Assert
       expect(result).toBe(3);
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE category = $1 AND price >= $2 AND price <= $3'),
+        expect.stringContaining('WHERE c.name = $1 AND p.price >= $2 AND p.price <= $3'),
         ['Doces', 5, 15]
       );
     });

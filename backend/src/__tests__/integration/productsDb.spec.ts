@@ -60,9 +60,10 @@ describeIfDb('Products integration (real DB)', () => {
       .send(createDto)
       .expect(201);
 
-    expect(res.body).toHaveProperty('id');
-    expect(res.body.category_id).toBe(1);
-    expect(res.body.organization_id).toBe(1);
+  expect(res.body.success).toBe(true);
+  expect(res.body.data).toHaveProperty('id');
+  expect(res.body.data.category_id).toBe(1);
+  expect(res.body.data.organization_id).toBe(1);
   });
 
   it('should reject product with invalid category_id', async () => {
@@ -81,6 +82,6 @@ describeIfDb('Products integration (real DB)', () => {
       .send(createDto)
       .expect(400);
 
-    expect(res.body.message).toContain('Invalid category_id');
+  expect(res.body.message).toContain('Invalid category_id');
   });
 });

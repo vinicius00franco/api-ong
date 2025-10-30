@@ -7,6 +7,8 @@ const config: Config = {
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest',
   },
+  // Load test environment variables before running tests
+  setupFiles: ['<rootDir>/jest.setup.js'],
   collectCoverageFrom: ['src/**/*.(t|j)s'],
   coverageDirectory: './coverage',
   testEnvironment: 'node',

@@ -19,18 +19,18 @@ export class PublicCatalogRepository implements IPublicCatalogRepository {
     let paramCounter = 1;
 
     if (category) {
-      whereClauses.push(`category = $${paramCounter++}`);
+      whereClauses.push(`c.name = $${paramCounter++}`);
       params.push(category);
     }
 
     if (price_min !== undefined && price_max !== undefined) {
-      whereClauses.push(`price >= $${paramCounter++} AND price <= $${paramCounter++}`);
+      whereClauses.push(`p.price >= $${paramCounter++} AND p.price <= $${paramCounter++}`);
       params.push(price_min, price_max);
     } else if (price_min !== undefined) {
-      whereClauses.push(`price >= $${paramCounter++}`);
+      whereClauses.push(`p.price >= $${paramCounter++}`);
       params.push(price_min);
     } else if (price_max !== undefined) {
-      whereClauses.push(`price <= $${paramCounter++}`);
+      whereClauses.push(`p.price <= $${paramCounter++}`);
       params.push(price_max);
     }
 
@@ -40,9 +40,11 @@ export class PublicCatalogRepository implements IPublicCatalogRepository {
     params.push(limit, offset);
 
     const query = `
-      SELECT * FROM products
+      SELECT p.id, p.name, p.description, p.price, c.name as category, p.image_url, p.stock_qty, p.weight_grams, p.organization_id
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
       ${whereClause}
-      ORDER BY id DESC
+      ORDER BY p.id DESC
       LIMIT $${paramCounter++} OFFSET $${paramCounter++}
     `;
 
@@ -58,26 +60,24 @@ export class PublicCatalogRepository implements IPublicCatalogRepository {
     let paramCounter = 1;
 
     if (category) {
-      whereClauses.push(`category = $${paramCounter++}`);
+      whereClauses.push(`c.name = $${paramCounter++}`);
       params.push(category);
     }
 
     if (price_min !== undefined && price_max !== undefined) {
-      whereClauses.push(`price >= $${paramCounter++} AND price <= $${paramCounter++}`);
+      whereClauses.push(`p.price >= $${paramCounter++} AND p.price <= $${paramCounter++}`);
       params.push(price_min, price_max);
     } else if (price_min !== undefined) {
-      whereClauses.push(`price >= $${paramCounter++}`);
+      whereClauses.push(`p.price >= $${paramCounter++}`);
       params.push(price_min);
     } else if (price_max !== undefined) {
-      whereClauses.push(`price <= $${paramCounter++}`);
+      whereClauses.push(`p.price <= $${paramCounter++}`);
       params.push(price_max);
     }
 
     const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
-    const query = whereClauses.length > 0 
-      ? `SELECT COUNT(*) FROM products ${whereClause}`
-      : 'SELECT COUNT(*) FROM products';
+    const query = `SELECT COUNT(*) FROM products p LEFT JOIN categories c ON p.category_id = c.id ${whereClause}`;
     const result = await this.db.query(query, params);
     return parseInt(result.rows[0].count, 10);
   }
