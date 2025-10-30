@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { CategoryModule } from '../../categories/categoryModule';
 import { CategoryRepository } from '../../categories/categoryRepository';
+import { HttpExceptionFilter } from '../../lib/httpExceptionFilter';
 
 describe('CategoryController (e2e)', () => {
   let app: INestApplication;
@@ -17,7 +18,8 @@ describe('CategoryController (e2e)', () => {
       })
       .compile();
 
-    app = moduleFixture.createNestApplication();
+  app = moduleFixture.createNestApplication();
+  app.useGlobalFilters(new HttpExceptionFilter());
     await app.init();
   });
 
@@ -31,7 +33,9 @@ describe('CategoryController (e2e)', () => {
       .get('/categories')
       .expect(200)
       .expect((res) => {
-        expect(Array.isArray(res.body)).toBe(true);
+        expect(res.body).toEqual(
+          expect.objectContaining({ success: true, data: expect.any(Array) })
+        );
       });
   });
 });

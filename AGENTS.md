@@ -127,7 +127,25 @@ docker-compose exec backend npm run test:coverage
 - **Errors**: Tipados (ValidationError, NotFoundError)
 - **Async**: Sempre com try/catch ou asyncHandler
 
-## 📋 .gitignore Essencial
+## � Padronização de Respostas e Erros (Obrigatório)
+- **Classe única de resposta**: Todas as respostas devem seguir o contrato `ApiResponse<T>`:
+	- Sucesso: `{ success: true, data, message? }`
+	- Erro: `{ success: false, message, error?: any }`
+- **Decorador de Controllers**: Use `@HandleErrors()` nos métodos HTTP dos controllers para:
+	- Envolver a execução em `try/catch` automaticamente
+	- Normalizar o retorno de sucesso com `ApiResponse.success(result)`
+	- Normalizar exceções com `ApiResponse.error(message, meta)`
+- **Filtro Global de Exceções**: Como Pipes/Guards/Interceptors executam antes do controller, registre `HttpExceptionFilter` globalmente para converter QUALQUER exceção (incluindo validação Zod) em `ApiResponse.error` preservando o `statusCode` HTTP original.
+- **Uso**:
+	- Controllers: `@HandleErrors()` em cada handler (ex.: `@Post()`, `@Get()`)
+	- `main.ts`: registrar `HttpExceptionFilter` global OU usar `APP_FILTER` em um módulo compartilhado
+	- Evite duplicidade: se o método já retornar `ApiResponse`, o decorador deve respeitar e não re-empacotar
+- **TDD**:
+	- Escreva testes que verifiquem o shape padronizado em sucesso e erro
+	- Teste validação (400) via Zod e erro de negócio (ex.: `NotFound`)
+	- Atualize gradualmente os testes existentes por feature ao adotar o padrão
+
+## �📋 .gitignore Essencial
 Baseado na implementação atual (Next.js + FastAPI + PostgreSQL + Docker):
 
 ```gitignore

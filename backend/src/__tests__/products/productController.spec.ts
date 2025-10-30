@@ -5,6 +5,7 @@ import { ProductModule } from '../../products/productModule'; // Vou criar
 import { ProductService } from '../../products/productService';
 import { ProductRepository } from '../../products/productRepository';
 import { AuthGuard } from '../../middleware/authMiddleware';
+import { HttpExceptionFilter } from '../../lib/httpExceptionFilter';
 
 describe('ProductController (e2e)', () => {
   let app: INestApplication;
@@ -32,7 +33,8 @@ describe('ProductController (e2e)', () => {
       })
       .compile();
 
-    app = moduleFixture.createNestApplication();
+  app = moduleFixture.createNestApplication();
+  app.useGlobalFilters(new HttpExceptionFilter());
     // Mock request object with organizationId
     app.use((req: any, res: any, next: any) => {
       req.organizationId = 'org1';
@@ -69,8 +71,12 @@ describe('ProductController (e2e)', () => {
         .send(createDto)
         .expect(201)
         .expect((res) => {
-          expect(res.body).toHaveProperty('id');
-          expect(res.body.name).toBe('Test Product');
+          expect(res.body).toEqual(
+            expect.objectContaining({
+              success: true,
+              data: expect.objectContaining({ id: expect.any(String), name: 'Test Product' }),
+            })
+          );
         });
     });
 
@@ -80,7 +86,12 @@ describe('ProductController (e2e)', () => {
       return request(app.getHttpServer())
         .post('/products')
         .send(invalidDto)
-        .expect(400);
+        .expect(400)
+        .expect((res) => {
+          expect(res.body).toEqual(
+            expect.objectContaining({ success: false, message: expect.any(String) })
+          );
+        });
     });
   });
 
@@ -94,7 +105,9 @@ describe('ProductController (e2e)', () => {
         .get('/products')
         .expect(200)
         .expect((res) => {
-          expect(res.body).toEqual(products);
+          expect(res.body).toEqual(
+            expect.objectContaining({ success: true, data: products })
+          );
         });
     });
   });
@@ -109,7 +122,9 @@ describe('ProductController (e2e)', () => {
         .get('/products/1')
         .expect(200)
         .expect((res) => {
-          expect(res.body).toEqual(product);
+          expect(res.body).toEqual(
+            expect.objectContaining({ success: true, data: product })
+          );
         });
     });
 
@@ -118,7 +133,12 @@ describe('ProductController (e2e)', () => {
 
       return request(app.getHttpServer())
         .get('/products/1')
-        .expect(500); // Since we throw Error, not NotFoundException
+        .expect(500)
+        .expect((res) => {
+          expect(res.body).toEqual(
+            expect.objectContaining({ success: false, message: expect.any(String) })
+          );
+        }); // Since we throw Error, not NotFoundException
     });
   });
 
@@ -133,7 +153,9 @@ describe('ProductController (e2e)', () => {
         .send(updateDto)
         .expect(200)
         .expect((res) => {
-          expect(res.body.name).toBe('Updated Name');
+          expect(res.body).toEqual(
+            expect.objectContaining({ success: true, data: expect.objectContaining({ name: 'Updated Name' }) })
+          );
         });
     });
   });
@@ -144,7 +166,10 @@ describe('ProductController (e2e)', () => {
 
       return request(app.getHttpServer())
         .delete('/products/1')
-        .expect(200);
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).toEqual(expect.objectContaining({ success: true }));
+        });
     });
   });
 });
