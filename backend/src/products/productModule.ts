@@ -9,6 +9,13 @@ import { CategoryModule } from '../categories/categoryModule';
 @Module({
   imports: [AuthModule, CategoryModule],
   controllers: [ProductController],
-  providers: [ProductService, ProductRepository, AuthGuard],
+  providers: [
+    ProductService,
+    {
+      provide: ProductRepository,
+      useFactory: () => new ProductRepository(),
+    },
+    AuthGuard,
+  ],
 })
 export class ProductModule {}

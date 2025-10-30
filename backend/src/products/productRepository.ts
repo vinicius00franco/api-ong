@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { pool } from '../lib/database';
+import { getDb } from '../lib/dbContext';
 import { IProductRepository, Product, CreateProductRequest, UpdateProductRequest } from './productTypes';
 
 @Injectable()
@@ -20,19 +20,19 @@ export class ProductRepository implements IProductRepository {
       product.weight_grams,
       product.organization_id,
     ];
-    const result = await pool.query(query, values);
+    const result = await getDb().query(query, values);
     return result.rows[0];
   }
 
   async findAll(organization_id: string): Promise<Product[]> {
     const query = 'SELECT * FROM products WHERE organization_id = $1';
-    const result = await pool.query(query, [organization_id]);
+    const result = await getDb().query(query, [organization_id]);
     return result.rows;
   }
 
   async findById(id: string, organization_id: string): Promise<Product | null> {
     const query = 'SELECT * FROM products WHERE id = $1 AND organization_id = $2';
-    const result = await pool.query(query, [id, organization_id]);
+    const result = await getDb().query(query, [id, organization_id]);
     return result.rows[0] || null;
   }
 
@@ -59,13 +59,13 @@ export class ProductRepository implements IProductRepository {
     `;
     values.push(id, organization_id);
 
-    const result = await pool.query(query, values);
+    const result = await getDb().query(query, values);
     return result.rows[0] || null;
   }
 
   async delete(id: string, organization_id: string): Promise<boolean> {
     const query = 'DELETE FROM products WHERE id = $1 AND organization_id = $2';
-    const result = await pool.query(query, [id, organization_id]);
+    const result = await getDb().query(query, [id, organization_id]);
     return (result.rowCount ?? 0) > 0;
   }
 }

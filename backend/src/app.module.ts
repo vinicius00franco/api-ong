@@ -5,6 +5,7 @@ import { AuthModule } from './auth/authModule';
 import { ProductModule } from './products/productModule';
 import { CategoryModule } from './categories/categoryModule';
 import { PublicCatalogModule } from './public/publicCatalogModule';
+import { pool } from './lib/database';
 
 @Module({
   imports: [
@@ -14,6 +15,12 @@ import { PublicCatalogModule } from './public/publicCatalogModule';
     ProductModule,
     CategoryModule,
     PublicCatalogModule,
+  ],
+  providers: [
+    {
+      provide: 'DB',
+      useValue: pool,
+    },
   ],
 })
 export class AppModule {}
