@@ -18,6 +18,9 @@ describe('Public Catalog Integration Tests (with transactions)', () => {
     testPool = new Pool({ connectionString: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/ong_db' });
     client = await testPool.connect();
 
+    // Truncate tables to start clean
+    await client.query('TRUNCATE TABLE products, categories, organizations RESTART IDENTITY CASCADE');
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [PublicCatalogModule],
     }).compile();

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Pool, QueryResult } from 'pg';
 import { getDb } from '../lib/dbContext';
 import { PublicProduct, PublicCatalogFilters } from './publicCatalogTypes';
 
@@ -9,6 +10,11 @@ export interface IPublicCatalogRepository {
 
 @Injectable()
 export class PublicCatalogRepository implements IPublicCatalogRepository {
+  private pool?: Pool;
+
+  constructor(pool?: Pool) {
+    this.pool = pool;
+  }
 
   async findPublicProducts(filters: PublicCatalogFilters): Promise<PublicProduct[]> {
     const { page = 1, limit = 20, category, price_min, price_max } = filters;
@@ -47,7 +53,8 @@ export class PublicCatalogRepository implements IPublicCatalogRepository {
       LIMIT $${paramCounter++} OFFSET $${paramCounter++}
     `;
 
-    const result = await getDb().query(query, params);
+    const runner = this.pool ?? getDb();
+    const result = await runner.query(query, params as any);
     return result.rows;
   }
 
@@ -77,7 +84,8 @@ export class PublicCatalogRepository implements IPublicCatalogRepository {
     const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
     const query = `SELECT COUNT(*) FROM products p LEFT JOIN categories c ON p.category_id = c.id ${whereClause}`;
-    const result = await getDb().query(query, params);
+    const runner = this.pool ?? getDb();
+    const result = await runner.query(query, params as any);
     return parseInt(result.rows[0].count, 10);
   }
 }

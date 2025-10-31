@@ -13,14 +13,13 @@ export class PublicCatalogService {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
 
-    const [products, total] = await Promise.all([
-      this.repository.findPublicProducts({ ...filters, page, limit }),
-      this.repository.countPublicProducts({
-        category: filters.category,
-        price_min: filters.price_min,
-        price_max: filters.price_max,
-      }),
-    ]);
+    // Run queries sequentially to preserve transactional AsyncLocalStorage context
+    const products = await this.repository.findPublicProducts({ ...filters, page, limit });
+    const total = await this.repository.countPublicProducts({
+      category: filters.category,
+      price_min: filters.price_min,
+      price_max: filters.price_max,
+    });
 
     return {
       products,
