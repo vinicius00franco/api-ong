@@ -6,6 +6,7 @@ import { ProductModule } from './products/productModule';
 import { CategoryModule } from './categories/categoryModule';
 import { PublicCatalogModule } from './public/publicCatalogModule';
 import { SearchModule } from './search/searchModule';
+import { OrderModule } from './orders/orderModule';
 import { pool } from './lib/database';
 
 @Module({
@@ -17,6 +18,7 @@ import { pool } from './lib/database';
     CategoryModule,
     PublicCatalogModule,
     SearchModule,
+    OrderModule,
   ],
   providers: [
     {

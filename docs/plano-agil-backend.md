@@ -83,7 +83,7 @@ Implementar uma busca em linguagem natural que seja resiliente a falhas.
     * Se falhar ou demorar, executar a busca fallback (ex: ILIKE no nome/descrição).
     * Retornar os resultados e a "interpretação aplicada" (ex: "Buscando por: Categoria=Doces" ou "Buscando por texto: doces").
 
-## Fase 5: Pedidos (MVP)
+## Fase 5: Pedidos (MVP) ✅ IMPLEMENTADA
 
 ### Objetivo
 Persistir um registro do pedido no banco de dados, sem lógica de estoque (Etapa 1).
@@ -101,6 +101,16 @@ Persistir um registro do pedido no banco de dados, sem lógica de estoque (Etapa
     * Inserir o registro na tabela `orders`.
     * Iterar pelos itens, buscar o `price` e `organization_id` atuais do produto.
     * Inserir os registros na tabela `order_items` com os dados buscados.
+
+### Implementação Realizada
+- ✅ Criada feature `orders` com arquitetura por feature (Controller, Service, Repository, Types, Schemas, Module)
+- ✅ Endpoints: `POST /orders`, `GET /orders`, `GET /orders/:id`
+- ✅ Multi-tenancy: pedidos isolados por `organization_id`
+- ✅ Validação com Zod
+- ✅ TDD: testes unitários para Repository, Service e Controller
+- ✅ Integração com produtos: valida se produtos existem e pertencem à ONG
+- ✅ Cálculo de total automático
+- ✅ Persistência de preço no momento da compra (`price_at_time`)
 
 ## Fase 6: Observabilidade e Entregáveis
 

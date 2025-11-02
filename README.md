@@ -3,7 +3,7 @@
 Sistema de gerenciamento de produtos para ONGs com busca inteligente via IA.
 
 ## Tecnologias
-- Backend: Next.js (API Routes)
+- Backend: NestJS
 - Banco: PostgreSQL
 - IA: FastAPI + OpenAI
 - Infra: Docker Compose
@@ -19,8 +19,31 @@ docker-compose up --build
 - LLM API: http://localhost:8000
 - Banco: localhost:5432
 
+## API Endpoints (Backend)
+
+### Autenticação
+- `POST /auth/login` - Login (retorna JWT)
+
+### Produtos (ONG autenticada)
+- `GET /products` - Listar produtos da ONG
+- `POST /products` - Criar produto
+- `GET /products/:id` - Obter produto por ID
+- `PUT /products/:id` - Atualizar produto
+- `DELETE /products/:id` - Deletar produto
+
+### Catálogo Público
+- `GET /public/catalog` - Listar produtos públicos (todas ONGs)
+
+### Busca Inteligente
+- `POST /search` - Busca por linguagem natural
+
+### Pedidos (ONG autenticada) - Novo na Fase 5
+- `POST /orders` - Criar pedido
+- `GET /orders` - Listar pedidos da ONG
+- `GET /orders/:id` - Obter pedido por ID
+
 ## Estrutura do Projeto
-- `backend/` - API Next.js
+- `backend/` - API NestJS
 - `llm-api/` - Serviço de IA FastAPI
 - `db/` - Scripts de banco de dados
 - `docker-compose.yml` - Orquestração
