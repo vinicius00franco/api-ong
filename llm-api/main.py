@@ -55,30 +55,25 @@ async def lifespan(app: FastAPI):
     }
     
     try:
-        db_pool = await asyncpg.create_pool(
-            **db_config,
-            min_size=2,
-            max_size=10,
-            command_timeout=60,
-        )
-        logger.info("✓ Pool de conexões criado com sucesso")
-
-        # Criar schema do banco (tabelas)
+        db_pool = await asyncpg.create_pool(**db_config, min_size=1, max_size=10)
+        logger.info("✅ Pool de conexões criado")
+        
+        # Cria schema se necessário
         async with db_pool.acquire() as conn:
             await conn.execute(CREATE_QUERIES_TABLE)
-            logger.info("✓ Schema do banco verificado/criado")
-
+        logger.info("✅ Schema do banco verificado/criado")
     except Exception as e:
-        # Em ambiente de testes/unit, permitir prosseguir em modo in-memory
-        logger.warning(f"⚠️ Não foi possível conectar ao banco, prosseguindo em modo in-memory: {e}")
+        logger.warning(f"⚠️ Falha ao conectar ao PostgreSQL: {e}")
+        logger.info("⚙️ Usando modo in-memory para testes (sem persistência)")
         db_pool = None
     
     yield  # Aplicação roda aqui
     
     # SHUTDOWN
+    logger.info("🛑 Aplicação finalizada")
     if db_pool:
         await db_pool.close()
-        logger.info("🛑 Pool de conexões fechado")
+        logger.info("✅ Pool de conexões fechado")
 
 
 def create_app() -> FastAPI:
@@ -126,10 +121,6 @@ def create_app() -> FastAPI:
     router = create_router(controller)
     app.include_router(router)
     logger.info("✓ Rotas registradas (in-memory quando DB indisponível)")
-
-    @app.on_event("shutdown")
-    async def shutdown_event():
-        logger.info("🛑 Aplicação finalizada")
 
     return app
 

@@ -43,7 +43,7 @@ class QueryController:
             logger.info(f"[HTTP] Resposta com sucesso - query_id: {query_id}")
 
             # Retorna apenas os filtros (compatível com os testes atuais)
-            return filtros.dict()
+            return filtros.model_dump()
         except ValueError as e:
             logger.warning(f"[HTTP] Erro de validação: {str(e)}")
             raise HTTPException(

@@ -8,7 +8,7 @@ import os
 import pytest
 import asyncio
 import asyncpg
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List
 import json
 
@@ -202,8 +202,10 @@ class TestQueryRepositorySaveQuery:
         # Verifica apenas que o timestamp foi setado
         assert row["created_at"] is not None
         # Verifica que é um timestamp recente (últimos 5 segundos)
-        now = datetime.utcnow()
-        diff = abs((now - row["created_at"]).total_seconds())
+        # PostgreSQL retorna timestamp naive, converta para UTC para comparar
+        created_at_utc = row["created_at"].replace(tzinfo=timezone.utc)
+        now = datetime.now(timezone.utc)
+        diff = abs((now - created_at_utc).total_seconds())
         assert diff < 5, f"Timestamp muito antigo ou no futuro. Diferença: {diff}s"
 
     async def test_save_query_multiple_calls_different_ids(self, repository):
@@ -249,9 +251,10 @@ class TestQueryRepositoryGetHistory:
         text2 = f"test_order_2_{suffix}"
         
         # Insere manualmente com timestamps controlados para garantir diferença
-        now = datetime.utcnow()
-        ts1 = now - timedelta(seconds=2)  # 2 segundos no passado
-        ts2 = now  # agora
+        # PostgreSQL espera timestamp naive (sem timezone), mas armazena como UTC
+        now = datetime.now(timezone.utc)
+        ts1 = (now - timedelta(seconds=2)).replace(tzinfo=None)  # Remove timezone
+        ts2 = now.replace(tzinfo=None)  # Remove timezone
         
         await db_connection.execute(
             "INSERT INTO queries (id, query_text, filters, status, created_at) VALUES ($1, $2, $3, $4, $5)",

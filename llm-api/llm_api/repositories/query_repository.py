@@ -8,7 +8,7 @@ import logging
 import json
 from typing import Dict, Any, Optional, List
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 
 import asyncpg
 
@@ -67,7 +67,7 @@ class QueryRepository(IQueryRepository):
         """
         query_id = self._generate_id()
         if self._memory_enabled:
-            created_at = datetime.utcnow()
+            created_at = datetime.now(timezone.utc)
             self._mem_store[query_id] = {
                 "id": query_id,
                 "query_text": query_text,

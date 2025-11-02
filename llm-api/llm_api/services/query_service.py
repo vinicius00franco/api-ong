@@ -51,7 +51,7 @@ class QueryService:
 
         # 1. Parse via LLM
         filtros = await self._parse_query(query_input.query)
-        logger.debug(f"Filtros extraídos: {filtros.dict()}")
+        logger.debug(f"Filtros extraídos: {filtros.model_dump()}")
 
         # 2. Valida filtros
         if not self.validate_filters(filtros):
@@ -60,7 +60,7 @@ class QueryService:
 
         # 3. Salva no banco
         query_id = await self._repository.save_query(
-            query_input.query, filtros.dict()
+            query_input.query, filtros.model_dump()
         )
         logger.info(f"Query salva com ID: {query_id}")
 
