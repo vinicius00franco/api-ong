@@ -1,0 +1,145 @@
+@startuml LLM_API_Sequence_Diagram
+!define HTTP_COLOR #FFE0B2
+!define CONTROLLER_COLOR #F8BBD0
+!define SERVICE_COLOR #FFF9C4
+!define REPOSITORY_COLOR #E1F5FF
+!define DB_COLOR #C8E6C9
+!define LLM_COLOR #E0BEE7
+
+title "LLM API - Parse Query Sequence Diagram"
+autonumber
+
+participant "📱 Client" as client #FFE0B2
+participant "🌐 FastAPI" as fastapi #F8BBD0
+participant "🎮 QueryController" as controller #F8BBD0
+participant "🧠 QueryService" as service #FFF9C4
+participant "🗄️ QueryRepository" as repository #E1F5FF
+participant "🔗 PostgreSQL" as db #C8E6C9
+participant "🤖 Google LLM" as llm #E0BEE7
+
+client ->> fastapi: POST /api/v1/parse-query\n{"query": "doces até 50"}
+
+fastapi ->> controller: route to parse_query()
+activate controller
+
+controller ->> controller: Validate input (Pydantic)
+alt Invalid Input
+    controller -->> client: 400 Bad Request\n{"success": false, "message": "..."}
+else Valid Input
+    controller ->> service: parse_and_save_query(input)
+    activate service
+    
+    service ->> service: Build prompt\nfrom query text
+    
+    service ->> llm: invoke(prompt)\n"Extract filters from: doces até 50"
+    activate llm
+    llm -->> service: {"category": "Doces",\n"price_max": 50.0}
+    deactivate llm
+    
+    service ->> service: Parse LLM response\nto FiltrosBusca
+    
+    service ->> service: validate_filters()\nCheck prices > 0
+    
+    alt Validation Fails
+        service -->> controller: ValidationError
+        controller -->> client: 400 Unprocessable Entity
+    else Validation Passes
+        service ->> repository: save_query(query_text, filters)
+        activate repository
+        
+        repository ->> repository: Generate UUID
+        
+        repository ->> db: BEGIN TRANSACTION
+        activate db
+        
+        repository ->> db: INSERT INTO queries\n(id, query_text, filters::jsonb, status)\nVALUES ($1, $2, $3, $4)
+        
+        db -->> repository: OK - ID saved
+        
+        repository ->> db: COMMIT
+        deactivate db
+        
+        repository -->> service: query_id = "a1b2c3d4"
+        deactivate repository
+        
+        service -->> controller: (filters, query_id)
+        deactivate service
+        
+        controller ->> controller: Build ApiResponse
+        
+        controller -->> client: 200 OK\n{\n  "success": true,\n  "query_id": "a1b2c3d4",\n  "filters": {...}\n}
+    end
+end
+
+deactivate controller
+
+== Get Query History ==
+
+client ->> fastapi: GET /api/v1/history?limit=5
+
+fastapi ->> controller: route to get_history(5)
+activate controller
+
+controller ->> service: get_query_history(5)
+activate service
+
+service ->> repository: get_query_history(5)
+activate repository
+
+repository ->> db: SELECT * FROM queries\nORDER BY created_at DESC\nLIMIT 5
+activate db
+
+db -->> repository: [Row1, Row2, Row3, Row4, Row5]
+deactivate db
+
+repository -->> service: [Dict, Dict, Dict, Dict, Dict]
+deactivate repository
+
+service ->> service: Convert to HistoryResponse\nobjects
+
+service -->> controller: List[HistoryResponse]
+deactivate service
+
+controller -->> client: 200 OK\n{\n  "success": true,\n  "data": [...]\n}
+
+deactivate controller
+
+== Error Handling ==
+
+note over llm
+  LLM API Fails or Timeout
+  (e.g., Google API down)
+end note
+
+client ->> fastapi: POST /api/v1/parse-query\n{"query": "invalid"}
+
+fastapi ->> controller: parse_query()
+activate controller
+
+controller ->> service: parse_and_save_query()
+activate service
+
+service ->> llm: invoke(prompt)
+activate llm
+
+llm --x service: ❌ Timeout / Connection Error
+deactivate llm
+
+service ->> service: Apply FALLBACK\nReturn empty FiltrosBusca
+
+service ->> repository: save_query(query_text, {})\nstatus = "fallback"
+activate repository
+
+repository ->> db: INSERT INTO queries\n(..., status = 'fallback')
+
+db -->> repository: OK
+deactivate repository
+
+service -->> controller: (empty_filters, query_id)
+deactivate service
+
+controller -->> client: 200 OK\n{\n  "success": true,\n  "query_id": "xyz789",\n  "filters": {},\n  "note": "Fallback applied"\n}
+
+deactivate controller
+
+@enduml

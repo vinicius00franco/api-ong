@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   db:
@@ -17,6 +17,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app_network
 
   backend:
     build: ./backend
@@ -35,8 +37,24 @@ services:
     build: ./llm-api
     ports:
       - "8000:8000"
+    env_file: ./llm-api/.env
     networks:
       - app_network
+
+  llm-api-tests:
+    build:
+      context: ./llm-api
+      dockerfile: Dockerfile.test
+    env_file: ./llm-api/.env
+    volumes:
+      - ./llm-api/coverage:/app/coverage
+    networks:
+      - app_network
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - test
 
 volumes:
   postgres_data:

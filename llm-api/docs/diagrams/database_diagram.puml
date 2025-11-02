@@ -1,0 +1,46 @@
+@startuml LLM_API_Database_Diagram
+!define TABLE_COLOR #C8E6C9
+!define PK_COLOR #FFE0B2
+!define FK_COLOR #E0BEE7
+!define INDEX_COLOR #B3E5FC
+
+title "LLM API - PostgreSQL Database Schema (ER Diagram)"
+
+entity "queries" as queries #C8E6C9 {
+    **PK id : VARCHAR(36)** #FFE0B2
+    --
+    query_text : TEXT [NOT NULL]
+    filters : JSONB [NOT NULL, DEFAULT '{}']
+    status : VARCHAR(20) [NOT NULL, DEFAULT 'processed']
+    created_at : TIMESTAMP [NOT NULL, DEFAULT CURRENT_TIMESTAMP]
+    updated_at : TIMESTAMP [NOT NULL, DEFAULT CURRENT_TIMESTAMP]
+    --
+    **IX idx_queries_created_at** (created_at DESC)
+    **IX idx_queries_status** (status)
+    **IX idx_queries_created_status** (created_at DESC, status)
+}
+
+note right of queries
+  **Tabela Principal**
+  
+  **Campos:**
+  - id: UUID truncado (8 chars)
+  - query_text: Original user query
+  - filters: JSON extraído do LLM
+    Exemplo:
+    {
+      "category": "Doces",
+      "price_min": 10.0,
+      "price_max": 50.0,
+      "tags": ["promo", "desconto"]
+    }
+  - status: 'processed', 'failed', 'fallback'
+  - created_at: Auto-timestamp
+  
+  **Índices:**
+  - created_at DESC: Para histórico
+  - status: Para filtragem
+  - Composto: Para queries complexas
+end note
+
+@enduml

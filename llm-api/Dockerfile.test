@@ -1,0 +1,21 @@
+# Dockerfile for llm-api testing
+
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Copy requirements
+COPY requirements.txt requirements-test.txt ./
+
+# Install dependencies (production + test)
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r requirements-test.txt
+
+# Copy source code
+COPY . .
+
+# Expose port
+EXPOSE 8000
+
+# Default: Run tests
+CMD ["pytest", "tests/", "-v", "--cov=llm_api", "--cov-report=html", "--cov-report=term-missing"]

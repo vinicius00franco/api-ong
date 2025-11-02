@@ -1,0 +1,215 @@
+@startuml LLM_API_Class_Diagram
+!define ABSTRACT_COLOR #E1F5FF
+!define CONCRETE_COLOR #C8E6C9
+!define SERVICE_COLOR #FFF9C4
+!define CONTROLLER_COLOR #F8BBD0
+!define DTO_COLOR #E0BEE7
+
+skinparam backgroundColor #FAFAFA
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #666666
+skinparam arrowColor #333333
+skinparam classFontName Courier
+skinparam classFontSize 11
+
+' ============================================================================
+' DTOs / Schemas (Pydantic Models)
+' ============================================================================
+
+package "📦 Schemas (DTOs)" #DTO_COLOR {
+    class QueryInput {
+        - query: str
+        --
+        + validate_query()
+    }
+    
+    class FiltrosBusca {
+        - category: Optional[str]
+        - price_min: Optional[float]
+        - price_max: Optional[float]
+        - tags: Optional[List[str]]
+        --
+        + dict(): Dict
+        + validate_prices(): bool
+    }
+    
+    class HistoryResponse {
+        - id: str
+        - query_text: str
+        - filters: FiltrosBusca
+        - status: str
+        - created_at: datetime
+    }
+}
+
+' ============================================================================
+' Repository Layer (Data Access)
+' ============================================================================
+
+package "🗄️ Repository Layer" #ABSTRACT_COLOR {
+    abstract class IQueryRepository {
+        {abstract} + save_query(query_text, filters): str
+        {abstract} + get_query_history(limit): List[Dict]
+        {abstract} + get_query_by_id(query_id): Optional[Dict]
+        {abstract} + update_query_status(query_id, status): bool
+    }
+    
+    class QueryRepository {
+        - db_pool: asyncpg.Pool
+        --
+        + __init__(db_pool)
+        + save_query(query_text, filters): str
+        + get_query_history(limit): List[Dict]
+        + get_query_by_id(query_id): Optional[Dict]
+        + update_query_status(query_id, status): bool
+        - _generate_id(): str
+    }
+    
+    class MockQueryRepository {
+        - _mock_data: Dict
+        --
+        + __init__()
+        + save_query(query_text, filters): str
+        + get_query_history(limit): List[Dict]
+        + get_query_by_id(query_id): Optional[Dict]
+        + update_query_status(query_id, status): bool
+    }
+}
+
+IQueryRepository <|.. QueryRepository : implements
+IQueryRepository <|.. MockQueryRepository : implements
+
+' ============================================================================
+' Service Layer (Business Logic)
+' ============================================================================
+
+package "🧠 Service Layer" #SERVICE_COLOR {
+    class QueryService {
+        - llm_model: ChatGoogleGenerativeAI
+        - repository: IQueryRepository
+        --
+        + __init__(llm_model, repository)
+        + parse_and_save_query(input): Tuple[FiltrosBusca, str]
+        + parse_query_only(text): FiltrosBusca
+        + get_query_history(limit): List[HistoryResponse]
+        + validate_filters(filtros): bool
+        - _parse_query(text): FiltrosBusca
+        - _build_prompt(text): str
+    }
+}
+
+' ============================================================================
+' Controller Layer (HTTP)
+' ============================================================================
+
+package "🌐 Controller Layer" #CONTROLLER_COLOR {
+    class QueryController {
+        - service: QueryService
+        --
+        + __init__(service)
+        + parse_query(input): ApiResponse
+        + parse_query_only(input): ApiResponse
+        + get_history(limit): ApiResponse
+    }
+    
+    class Router {
+        {static} + create_router(controller): APIRouter
+    }
+}
+
+' ============================================================================
+' External Dependencies
+' ============================================================================
+
+package "🔌 External Dependencies" {
+    class ChatGoogleGenerativeAI {
+        - model: str
+        --
+        + invoke(prompt): str
+    }
+    
+    class AsyncpgPool {
+        - host: str
+        - port: int
+        - database: str
+        --
+        + acquire(): Connection
+        + close()
+    }
+}
+
+' ============================================================================
+' FastAPI Application
+' ============================================================================
+
+package "⚙️ FastAPI Application" {
+    class FastAPIApp {
+        - lifespan: asynccontextmanager
+        - db_pool: asyncpg.Pool
+        - routes: List[Route]
+        --
+        + startup()
+        + shutdown()
+        + include_router(router)
+    }
+}
+
+' ============================================================================
+' Relationships
+' ============================================================================
+
+' Repository knows nothing
+QueryService --> IQueryRepository : depends on
+QueryService --> ChatGoogleGenerativeAI : uses
+QueryService --> FiltrosBusca : returns
+QueryService --> HistoryResponse : returns
+
+' Controller knows Service
+QueryController --> QueryService : depends on
+QueryController --> QueryInput : accepts
+QueryController --> FiltrosBusca : returns
+
+' Router creates APIRouter
+Router --> QueryController : uses
+Router --> FastAPIApp : registers with
+
+' FastAPI manages everything
+FastAPIApp --> QueryController : injects into
+FastAPIApp --> AsyncpgPool : creates/manages
+
+' Service uses external LLM
+QueryService -.-> ChatGoogleGenerativeAI : LLM API calls
+
+' Repository uses DB
+QueryRepository -.-> AsyncpgPool : SQL queries
+
+note right of IQueryRepository
+  Single Responsibility:
+  Only handles data persistence
+  No business logic here
+end note
+
+note right of QueryService
+  Business Logic:
+  - Parse queries
+  - Validate filters
+  - Fallback handling
+  - Orchestrate operations
+end note
+
+note right of QueryController
+  HTTP Concerns:
+  - Receive requests
+  - Validate input
+  - Return responses
+  - Error handling
+end note
+
+note bottom of QueryRepository
+  PostgreSQL with:
+  - asyncpg pool
+  - Prepared statements
+  - JSONB for filters
+end note
+
+@enduml

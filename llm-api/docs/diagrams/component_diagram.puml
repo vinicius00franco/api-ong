@@ -1,0 +1,175 @@
+@startuml LLM_API_Component_Diagram
+!define API_COLOR #FFE0B2
+!define LAYER_COLOR #FFF9C4
+!define DATA_COLOR #E1F5FF
+!define EXTERNAL_COLOR #E0BEE7
+!define INFRASTRUCTURE_COLOR #C8E6C9
+
+title "LLM API - Component Diagram (Architecture)"
+
+package "🌐 HTTP Layer" as http_layer #FFE0B2 {
+    component "FastAPI Server" as fastapi_app
+    component "Request Validation" as request_validation
+    component "Response Handler" as response_handler
+}
+
+package "🎮 Controller Layer" as controller_layer #FFF9C4 {
+    component "QueryController" as controller {
+        interface "parse_query()" as parse_query_endpoint
+        interface "parse_query_only()" as parse_only_endpoint
+        interface "get_history()" as get_history_endpoint
+    }
+    component "Router Factory" as router
+}
+
+package "🧠 Service Layer" as service_layer #FFF9C4 {
+    component "QueryService" as service {
+        interface "parse_and_save_query()" as parse_save
+        interface "parse_query_only()" as parse_only
+        interface "get_query_history()" as get_hist
+        interface "validate_filters()" as validate
+    }
+}
+
+package "🗄️ Repository Layer" as repo_layer #E1F5FF {
+    component "IQueryRepository" as repo_interface {
+        interface "save_query()" as save_query_repo
+        interface "get_query_by_id()" as get_by_id_repo
+        interface "get_query_history()" as get_hist_repo
+        interface "update_query_status()" as update_status_repo
+    }
+    
+    component "QueryRepository" as postgres_repo {
+        interface "SQL Operations" as sql_ops
+    }
+}
+
+package "💾 Data Layer" as data_layer #E1F5FF {
+    component "asyncpg Pool" as asyncpg_pool
+    component "PostgreSQL DB" as postgres_db
+}
+
+package "🤖 External Services" as external #E0BEE7 {
+    component "Google LLM API" as google_llm {
+        interface "invoke(prompt)" as llm_invoke
+    }
+}
+
+package "⚙️ Infrastructure" as infrastructure #C8E6C9 {
+    component "Logging Service" as logging
+    component "Error Handler" as error_handler
+    component "Environment Config" as config
+}
+
+' ============================================================================
+' Relationships & Dependencies
+' ============================================================================
+
+fastapi_app --> request_validation : validates
+fastapi_app --> response_handler : formats responses
+fastapi_app --> router : registers routes
+
+router --> controller : creates controller
+router --> fastapi_app : binds routes
+
+request_validation --> controller : invokes
+controller --> parse_query_endpoint : exposes
+controller --> parse_only_endpoint : exposes
+controller --> get_history_endpoint : exposes
+
+parse_query_endpoint --> service : calls
+parse_only_endpoint --> service : calls
+get_history_endpoint --> service : calls
+
+service --> parse_save : implements
+service --> parse_only : implements
+service --> get_hist : implements
+service --> validate : implements
+
+service --> repo_interface : depends on (DI)
+repo_interface --> postgres_repo : implemented by
+
+postgres_repo --> sql_ops : performs
+postgres_repo --> asyncpg_pool : uses
+
+asyncpg_pool --> postgres_db : connects to
+
+service --> google_llm : calls LLM API
+google_llm --> llm_invoke : exposes
+
+controller --> error_handler : uses
+service --> error_handler : uses
+postgres_repo --> error_handler : uses
+
+controller --> logging : logs requests
+service --> logging : logs parsing
+postgres_repo --> logging : logs queries
+google_llm --> logging : logs API calls
+
+config --> fastapi_app : provides DB credentials
+config --> asyncpg_pool : provides connection params
+config --> google_llm : provides API key
+
+response_handler --> controller : returns
+
+' ============================================================================
+' Notes
+' ============================================================================
+
+note right of http_layer
+  **HTTP Interface**
+  - Handles REST requests
+  - Validates using Pydantic
+  - Formats JSON responses
+end note
+
+note right of controller_layer
+  **Presentation Layer**
+  - Maps HTTP to business logic
+  - 3 endpoints:
+    1. POST /parse-query
+    2. POST /parse-query-only
+    3. GET /history
+end note
+
+note right of service_layer
+  **Business Logic Layer**
+  - Orchestrates operations
+  - Integrates with LLM
+  - Applies validation
+  - Handles fallback
+end note
+
+note right of repo_layer
+  **Data Access Layer**
+  - Abstracts DB access
+  - Uses prepared statements
+  - Implements SOLID
+  - Swappable implementation
+end note
+
+note right of data_layer
+  **Persistence**
+  - asyncpg: Async PostgreSQL
+  - Connection pooling
+  - ACID transactions
+  - JSONB for structured data
+end note
+
+note right of external
+  **External APIs**
+  - Google Gemini LLM
+  - Structured output
+  - Timeout handling
+  - Fallback support
+end note
+
+note right of infrastructure
+  **Cross-cutting Concerns**
+  - Logging with context
+  - Error handling & recovery
+  - Configuration management
+  - Environment variables
+end note
+
+@enduml
