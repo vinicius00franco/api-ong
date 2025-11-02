@@ -17,5 +17,6 @@ import { CategoryModule } from '../categories/categoryModule';
     },
     AuthGuard,
   ],
+  exports: [ProductRepository],
 })
 export class ProductModule {}

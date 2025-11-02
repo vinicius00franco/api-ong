@@ -7,6 +7,12 @@ describe('Health (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
+    // Set required environment variables for tests
+    process.env.LLM_API_URL = 'http://localhost:8000/api/v1/parse-query-only';
+    process.env.LLM_TIMEOUT = '3000';
+    process.env.JWT_SECRET = 'test_jwt_secret';
+    process.env.DATABASE_URL = 'postgresql://user:password@localhost:5432/ong_db';
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -17,7 +23,9 @@ describe('Health (e2e)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   it('GET /api/health -> { status: "ok" }', async () => {
