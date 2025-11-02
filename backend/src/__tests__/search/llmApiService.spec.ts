@@ -45,4 +45,34 @@ describe('LlmApiService', () => {
     const result = await service.getFilters('qualquer');
     expect(result).toBeNull();
   });
+
+  it('should return null when response data is missing', async () => {
+    http.post.mockReturnValue(of({ data: null } as any));
+
+    const result = await service.getFilters('teste sem data');
+    expect(result).toBeNull();
+  });
+
+  it('should return null when response is null', async () => {
+    http.post.mockReturnValue(of(null as any));
+
+    const result = await service.getFilters('teste resposta null');
+    expect(result).toBeNull();
+  });
+
+  it('should handle network errors gracefully', async () => {
+    http.post.mockReturnValue(throwError(() => new Error('Network error')) as any);
+
+    const result = await service.getFilters('network fail');
+    expect(result).toBeNull();
+  });
+
+  it('should handle unexpected exceptions', async () => {
+    http.post.mockImplementation(() => {
+      throw new Error('Unexpected sync error');
+    });
+
+    const result = await service.getFilters('sync error');
+    expect(result).toBeNull();
+  });
 });
