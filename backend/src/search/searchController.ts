@@ -5,7 +5,7 @@ import { HandleErrors } from '../lib/handleErrors';
 import { ZodValidationPipe } from '../lib/zodValidationPipe';
 import { searchQuerySchema, SearchQueryDto } from './searchSchemas';
 
-@Controller('api/public/search')
+@Controller('public/search')
 export class SearchController {
   constructor(private readonly service: SearchService) {}
 

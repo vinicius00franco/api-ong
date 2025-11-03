@@ -5,7 +5,7 @@ import { HandleErrors } from '../lib/handleErrors';
 import { publicCatalogQuerySchema, PublicCatalogQueryDto } from './publicCatalogSchemas';
 import { ZodValidationPipe } from '../lib/zodValidationPipe';
 
-@Controller('api/public/catalog')
+@Controller('public/catalog')
 export class PublicCatalogController {
   constructor(private readonly service: PublicCatalogService) {}
 
