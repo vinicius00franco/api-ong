@@ -30,7 +30,7 @@ describe('AuthRepository', () => {
 
       const result = await repository.findOrganizationByEmail('test@example.com');
 
-      expect(result).toEqual(mockOrganization);
+      expect(result).toEqual({ id: 'org1', passwordHash: 'hash' });
       expect(pool.query).toHaveBeenCalledWith(
         'SELECT id, password_hash FROM organizations WHERE email = $1',
         ['test@example.com']

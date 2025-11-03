@@ -42,12 +42,16 @@ python main.py
 - LLM API: http://localhost:8000
 - Banco: localhost:5432 (user: user, password: password, db: ong_db)
 
-### API Endpoints (Backend)
+### Documentação Completa da API
+
+Para documentação detalhada de todos os endpoints, incluindo exemplos de requisição/resposta, consulte: [`docs/api-endpoints.md`](docs/api-endpoints.md)
+
+### API Endpoints (Backend) - Visão Geral
 
 #### Autenticação
 - `POST /auth/login` - Login (retorna JWT)
   - Body: `{ "email": "string", "password": "string" }`
-  - Response: `{ "access_token": "jwt_token" }`
+  - Response: `{ "accessToken": "jwt_token", "organizationId": "string" }`
 
 #### Produtos (ONG autenticada - requer Bearer token)
 - `GET /products` - Listar produtos da ONG
@@ -60,9 +64,9 @@ python main.py
 - `GET /public/catalog` - Listar produtos públicos (todas ONGs)
 
 #### Busca Inteligente (requer Bearer token)
-- `POST /search` - Busca por linguagem natural
-  - Body: `{ "query": "busca em linguagem natural" }`
-  - Response: `{ "interpretation": "...", "ai_used": true/false, "fallback_applied": true/false, "data": [...] }`
+- `GET /public/search` - Busca por linguagem natural
+  - Query: `?q=busca em linguagem natural`
+  - Response: `{ "interpretation": "...", "aiUsed": true/false, "fallbackApplied": true/false, "data": [...] }`
 
 #### Pedidos (ONG autenticada - requer Bearer token)
 - `POST /orders` - Criar pedido
@@ -138,9 +142,11 @@ Os logs são estruturados para facilitar:
 
 ## Testes
 
-### Cobertura de Testes
+### Estratégia de Testes
 
-- **Total**: 147 testes
+- **Banco de dados**: Os testes usam o banco PostgreSQL principal com **transações isoladas**
+- **Isolamento**: Cada teste inicia uma transação que é revertida (ROLLBACK) ao final
+- **Dados reais preservados**: Não afeta dados de produção ou desenvolvimento
 - **Cobertura alvo**: 80% (regras de negócio críticas)
 - **Metodologia**: TDD (Test-Driven Development)
 
@@ -175,8 +181,8 @@ npm test -- --testPathPattern=integration/publicCatalogDb.spec.ts
 
 ### Tipos de Teste
 
-- **Unitários**: Services, repositories, middlewares
-- **Integração**: APIs completas com banco real
+- **Unitários**: Services, repositories, middlewares (com mocks)
+- **Integração**: APIs completas com banco real (transações isoladas)
 - **E2E**: Fluxos completos da aplicação
 
 ## Estrutura do Projeto

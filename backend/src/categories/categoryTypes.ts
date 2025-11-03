@@ -1,7 +1,7 @@
 export interface Category {
   id: number;
   name: string;
-  created_at: Date;
+  createdAt: Date;
 }
 
 export interface ICategoryRepository {

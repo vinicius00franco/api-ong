@@ -5,10 +5,14 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthRepository implements IAuthRepository {
-  async findOrganizationByEmail(email: string): Promise<{ id: string; password_hash: string } | null> {
+  async findOrganizationByEmail(email: string): Promise<{ id: string; passwordHash: string } | null> {
     const query = 'SELECT id, password_hash FROM organizations WHERE email = $1';
     const result = await getDb().query(query, [email]);
-    return result.rows[0] || null;
+    if (!result.rows[0]) return null;
+    return {
+      id: result.rows[0].id,
+      passwordHash: result.rows[0].password_hash,
+    };
   }
 
   async createOrganization(name: string, email: string, password: string): Promise<{ id: number; name: string; email: string }> {
@@ -25,7 +29,17 @@ export class AuthRepository implements IAuthRepository {
   async findUserByEmail(email: string): Promise<User | null> {
     const query = 'SELECT id, name, email, password_hash, role, organization_id, created_at FROM users WHERE email = $1';
     const result = await getDb().query(query, [email]);
-    return result.rows[0] || null;
+    if (!result.rows[0]) return null;
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      passwordHash: row.password_hash,
+      role: row.role,
+      organizationId: row.organization_id,
+      createdAt: row.created_at,
+    };
   }
 
   async createUser(user: CreateUserRequest): Promise<User> {
@@ -35,9 +49,18 @@ export class AuthRepository implements IAuthRepository {
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id, name, email, password_hash, role, organization_id, created_at
     `;
-    const values = [user.name, user.email, hashedPassword, user.role || 'user', user.organization_id];
+    const values = [user.name, user.email, hashedPassword, user.role || 'user', user.organizationId];
     const result = await getDb().query(query, values);
-    return result.rows[0];
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      passwordHash: row.password_hash,
+      role: row.role,
+      organizationId: row.organization_id,
+      createdAt: row.created_at,
+    };
   }
 
   async updateUser(id: number, updates: UpdateUserRequest): Promise<User | null> {
@@ -68,7 +91,17 @@ export class AuthRepository implements IAuthRepository {
     values.push(id);
     const query = `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING id, name, email, password_hash, role, organization_id, created_at`;
     const result = await getDb().query(query, values);
-    return result.rows[0] || null;
+    if (!result.rows[0]) return null;
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      passwordHash: row.password_hash,
+      role: row.role,
+      organizationId: row.organization_id,
+      createdAt: row.created_at,
+    };
   }
 
   async deleteUser(id: number): Promise<boolean> {

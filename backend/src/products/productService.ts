@@ -11,10 +11,10 @@ export class ProductService {
   ) {}
 
   async create(product: CreateProductRequest, organizationId: string): Promise<Product> {
-    if (!(await this.categoryRepository.exists(product.category_id))) {
-      throw new BadRequestException('Invalid category_id');
+    if (!(await this.categoryRepository.exists(product.categoryId))) {
+      throw new BadRequestException('Invalid categoryId');
     }
-    return this.productRepository.create({ ...product, organization_id: organizationId });
+    return this.productRepository.create({ ...product, organizationId });
   }
 
   async findAll(organizationId: string): Promise<Product[]> {
@@ -30,9 +30,9 @@ export class ProductService {
   }
 
   async update(id: string, organizationId: string, updates: UpdateProductRequest): Promise<Product> {
-    if (updates.category_id !== undefined) {
-      if (!(await this.categoryRepository.exists(updates.category_id))) {
-        throw new BadRequestException('Invalid category_id');
+    if (updates.categoryId !== undefined) {
+      if (!(await this.categoryRepository.exists(updates.categoryId))) {
+        throw new BadRequestException('Invalid categoryId');
       }
     }
     const product = await this.productRepository.update(id, organizationId, updates);

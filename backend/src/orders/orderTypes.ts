@@ -1,19 +1,19 @@
 export interface Order {
   id: number;
-  customer_id?: number;
-  organization_id: number;
-  created_at: Date;
+  customerId?: number;
+  organizationId: number;
+  createdAt: Date;
   items: OrderItem[];
 }
 
 export interface OrderItem {
   id: number;
-  order_id: number;
-  product_id: number;
+  orderId: number;
+  productId: number;
   quantity: number;
-  price_at_time: number;
-  organization_id: number;
-  created_at: Date;
+  priceAtTime: number;
+  organizationId: number;
+  createdAt: Date;
   product?: {
     id: number;
     name: string;
@@ -22,17 +22,17 @@ export interface OrderItem {
 }
 
 export interface CreateOrderDto {
-  customer_id?: number;
+  customerId?: number;
   items: {
-    product_id: number;
+    productId: number;
     quantity: number;
   }[];
 }
 
 export interface OrderResponse {
   id: number;
-  customer_id?: number;
+  customerId?: number;
   items: OrderItem[];
   total: number;
-  created_at: Date;
+  createdAt: Date;
 }

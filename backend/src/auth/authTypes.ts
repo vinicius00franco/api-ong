@@ -4,24 +4,24 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  access_token: string;
-  organization_id: string;
+  accessToken: string;
+  organizationId: string;
 }
 
 export interface JWTPayload {
   sub: string; // user id
   email: string;
-  organization_id: string;
+  organizationId: string;
 }
 
 export interface User {
   id: number;
   name: string;
   email: string;
-  password_hash: string;
+  passwordHash: string;
   role: 'user' | 'admin';
-  organization_id: number;
-  created_at: Date;
+  organizationId: number;
+  createdAt: Date;
 }
 
 export interface CreateUserRequest {
@@ -29,7 +29,7 @@ export interface CreateUserRequest {
   email: string;
   password: string;
   role?: 'user' | 'admin';
-  organization_id: number;
+  organizationId: number;
 }
 
 export interface UpdateUserRequest {
@@ -40,7 +40,7 @@ export interface UpdateUserRequest {
 }
 
 export interface IAuthRepository {
-  findOrganizationByEmail(email: string): Promise<{ id: string; password_hash: string } | null>;
+  findOrganizationByEmail(email: string): Promise<{ id: string; passwordHash: string } | null>;
   findUserByEmail(email: string): Promise<User | null>;
   createUser(user: CreateUserRequest): Promise<User>;
   updateUser(id: number, updates: UpdateUserRequest): Promise<User | null>;

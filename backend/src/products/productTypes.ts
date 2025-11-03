@@ -3,38 +3,38 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  category_id: number;
-  image_url: string;
-  stock_qty: number;
-  weight_grams: number;
-  organization_id: string;
-  created_at: Date;
+  categoryId: number;
+  imageUrl: string;
+  stockQty: number;
+  weightGrams: number;
+  organizationId: string;
+  createdAt: Date;
 }
 
 export interface CreateProductRequest {
   name: string;
   description: string;
   price: number;
-  category_id: number;
-  image_url: string;
-  stock_qty: number;
-  weight_grams: number;
+  categoryId: number;
+  imageUrl: string;
+  stockQty: number;
+  weightGrams: number;
 }
 
 export interface UpdateProductRequest {
   name?: string;
   description?: string;
   price?: number;
-  category_id?: number;
-  image_url?: string;
-  stock_qty?: number;
-  weight_grams?: number;
+  categoryId?: number;
+  imageUrl?: string;
+  stockQty?: number;
+  weightGrams?: number;
 }
 
 export interface IProductRepository {
-  create(product: CreateProductRequest & { organization_id: string }): Promise<Product>;
-  findAll(organization_id: string): Promise<Product[]>;
-  findById(id: string, organization_id: string): Promise<Product | null>;
-  update(id: string, organization_id: string, updates: UpdateProductRequest): Promise<Product | null>;
-  delete(id: string, organization_id: string): Promise<boolean>;
+  create(product: CreateProductRequest & { organizationId: string }): Promise<Product>;
+  findAll(organizationId: string): Promise<Product[]>;
+  findById(id: string, organizationId: string): Promise<Product | null>;
+  update(id: string, organizationId: string, updates: UpdateProductRequest): Promise<Product | null>;
+  delete(id: string, organizationId: string): Promise<boolean>;
 }

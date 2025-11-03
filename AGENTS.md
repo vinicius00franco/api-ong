@@ -58,5 +58,10 @@ Fornecer regras práticas e obrigatórias para desenvolvimento (back-end NestJS 
 - README com instruções de run (Docker), endpoints principais e configuração da LLM
 - Tests incluindo IA-success e IA-fallback
 
+## 11. Convenções de API e JSON
+- Todas as respostas JSON e parâmetros de requisição devem usar **camelCase** (ex.: `organizationId`, `accessToken`, `createdAt`).
+- Evitar **snake_case** (ex.: `organization_id`, `access_token`, `created_at`).
+- Aplicar consistentemente em tipos TypeScript, schemas Zod e respostas de API.
+
 ---
 Regra de ouro: código sem teste = código rejeitado.

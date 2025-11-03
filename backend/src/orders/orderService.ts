@@ -13,22 +13,22 @@ export class OrderService {
   async create(orderData: CreateOrderDto, organizationId: number): Promise<OrderResponse> {
     // Validate all products exist and belong to the organization
     for (const item of orderData.items) {
-      const product = await this.productRepository.findById(item.product_id.toString(), organizationId.toString());
+      const product = await this.productRepository.findById(item.productId.toString(), organizationId.toString());
       if (!product) {
-        throw new BadRequestException(`Product ${item.product_id} not found or not accessible`);
+        throw new BadRequestException(`Product ${item.productId} not found or not accessible`);
       }
     }
 
-    const order = await this.orderRepository.create({ ...orderData, organization_id: organizationId });
+    const order = await this.orderRepository.create({ ...orderData, organizationId });
 
-    const total = order.items.reduce((sum, item) => sum + (item.price_at_time * item.quantity), 0);
+    const total = order.items.reduce((sum, item) => sum + (item.priceAtTime * item.quantity), 0);
 
     return {
       id: order.id,
-      customer_id: order.customer_id,
+      customerId: order.customerId,
       items: order.items,
       total,
-      created_at: order.created_at,
+      createdAt: order.createdAt,
     };
   }
 
@@ -36,10 +36,10 @@ export class OrderService {
     const orders = await this.orderRepository.findAll(organizationId);
     return orders.map(order => ({
       id: order.id,
-      customer_id: order.customer_id,
+      customerId: order.customerId,
       items: order.items,
-      total: order.items.reduce((sum, item) => sum + (item.price_at_time * item.quantity), 0),
-      created_at: order.created_at,
+      total: order.items.reduce((sum, item) => sum + (item.priceAtTime * item.quantity), 0),
+      createdAt: order.createdAt,
     }));
   }
 
@@ -49,14 +49,14 @@ export class OrderService {
       throw new NotFoundException('Order not found');
     }
 
-    const total = order.items.reduce((sum, item) => sum + (item.price_at_time * item.quantity), 0);
+    const total = order.items.reduce((sum, item) => sum + (item.priceAtTime * item.quantity), 0);
 
     return {
       id: order.id,
-      customer_id: order.customer_id,
+      customerId: order.customerId,
       items: order.items,
       total,
-      created_at: order.created_at,
+      createdAt: order.createdAt,
     };
   }
 }

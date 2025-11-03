@@ -6,7 +6,11 @@ import { Category, ICategoryRepository } from './categoryTypes';
 export class CategoryRepository implements ICategoryRepository {
   async findAll(): Promise<Category[]> {
     const result = await getDb().query('SELECT id, name, created_at FROM categories ORDER BY id');
-    return result.rows;
+    return result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      createdAt: row.created_at,
+    }));
   }
 
   async exists(id: number): Promise<boolean> {
