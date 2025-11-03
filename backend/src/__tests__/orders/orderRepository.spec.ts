@@ -116,6 +116,41 @@ describe('OrderRepository', () => {
         }],
       });
     });
+
+    it('should handle orders with deleted products', async () => {
+      const organizationId = 1;
+      const mockRows = [
+        {
+          id: 1,
+          customer_id: 1,
+          created_at: new Date(),
+          item_id: 1,
+          product_id: 1,
+          quantity: 2,
+          price_at_time: 10.50,
+          item_created_at: new Date(),
+          product_name: null, // Product was deleted
+          current_price: null,
+        },
+      ];
+
+      (pool.query as jest.Mock).mockResolvedValue({ rows: mockRows });
+
+      const result = await repository.findAll(organizationId);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].items[0].product).toBeUndefined();
+    });
+
+    it('should return empty array when no orders found', async () => {
+      const organizationId = 1;
+
+      (pool.query as jest.Mock).mockResolvedValue({ rows: [] });
+
+      const result = await repository.findAll(organizationId);
+
+      expect(result).toEqual([]);
+    });
   });
 
   describe('findById', () => {
@@ -161,6 +196,32 @@ describe('OrderRepository', () => {
           },
         }],
       });
+    });
+
+    it('should handle order with deleted products', async () => {
+      const id = 1;
+      const organizationId = 1;
+      const mockRows = [
+        {
+          id: 1,
+          customer_id: 1,
+          created_at: new Date(),
+          item_id: 1,
+          product_id: 1,
+          quantity: 2,
+          price_at_time: 10.50,
+          item_created_at: new Date(),
+          product_name: null, // Product was deleted
+          current_price: null,
+        },
+      ];
+
+      (pool.query as jest.Mock).mockResolvedValue({ rows: mockRows });
+
+      const result = await repository.findById(id, organizationId);
+
+      expect(result).not.toBeNull();
+      expect(result!.items[0].product).toBeUndefined();
     });
 
     it('should return null if not found', async () => {
