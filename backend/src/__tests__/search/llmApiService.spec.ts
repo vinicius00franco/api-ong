@@ -68,9 +68,7 @@ describe('LlmApiService', () => {
   });
 
   it('should handle unexpected exceptions', async () => {
-    http.post.mockImplementation(() => {
-      throw new Error('Unexpected sync error');
-    });
+    http.post.mockReturnValue(throwError(() => new Error('Unexpected sync error')));
 
     const result = await service.getFilters('sync error');
     expect(result).toBeNull();

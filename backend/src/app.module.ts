@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/authModule';
@@ -8,6 +8,7 @@ import { PublicCatalogModule } from './public/publicCatalogModule';
 import { SearchModule } from './search/searchModule';
 import { OrderModule } from './orders/orderModule';
 import { pool } from './lib/database';
+import { RequestLoggingMiddleware } from './lib/requestLoggingMiddleware';
 
 @Module({
   imports: [
@@ -27,4 +28,8 @@ import { pool } from './lib/database';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestLoggingMiddleware).forRoutes('*');
+  }
+}

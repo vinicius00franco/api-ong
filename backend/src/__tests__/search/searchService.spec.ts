@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SearchService } from '../../search/searchService';
 import { SearchRepository } from '../../search/searchRepository';
 import { LlmApiService } from '../../search/llmApiService';
+import { Logger } from '@nestjs/common';
 
 describe('SearchService', () => {
   let service: SearchService;
@@ -146,5 +147,79 @@ describe('SearchService', () => {
     expect(repo.findByText).toHaveBeenCalledWith('busca vaga');
     expect(out.ai_used).toBe(false);
     expect(out.fallback_applied).toBe(true);
+  });
+
+  describe('Search Logging', () => {
+    let loggerSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      loggerSpy = jest.spyOn(service['logger'], 'log').mockImplementation();
+    });
+
+    afterEach(() => {
+      loggerSpy.mockRestore();
+    });
+
+    it('should log search event when AI succeeds', async () => {
+      const filters = { search_term: 'chocolate', category: 'Doces', price_max: 30 };
+      llm.getFilters.mockResolvedValue(filters);
+      const products = [
+        { id: 1, name: 'Chocolate', description: 'Dark', price: 20, category: 'Doces', image_url: '', stock_qty: 5, weight_grams: 100, organization_id: 1 },
+      ];
+      repo.findByFilters.mockResolvedValue(products as any);
+
+      await service.searchProducts('chocolate até 30 reais');
+
+      expect(loggerSpy).toHaveBeenCalledWith(
+        JSON.stringify({
+          message: 'SmartSearch Event',
+          input_text: 'chocolate até 30 reais',
+          generated_filters: filters,
+          ai_success: true,
+          fallback_applied: false,
+        })
+      );
+    });
+
+    it('should log search event when fallback is applied due to AI failure', async () => {
+      llm.getFilters.mockResolvedValue(null);
+      const products = [
+        { id: 2, name: 'Produto', description: 'Desc', price: 10, category: 'Geral', image_url: '', stock_qty: 1, weight_grams: 50, organization_id: 1 },
+      ];
+      repo.findByText.mockResolvedValue(products as any);
+
+      await service.searchProducts('busca qualquer');
+
+      expect(loggerSpy).toHaveBeenCalledWith(
+        JSON.stringify({
+          message: 'SmartSearch Event',
+          input_text: 'busca qualquer',
+          generated_filters: {},
+          ai_success: false,
+          fallback_applied: true,
+        })
+      );
+    });
+
+    it('should log search event when fallback is applied due to insufficient filters', async () => {
+      const insufficientFilters = { search_term: 'apenas termo' };
+      llm.getFilters.mockResolvedValue(insufficientFilters);
+      const products = [
+        { id: 3, name: 'Produto', description: 'Desc', price: 15, category: 'Geral', image_url: '', stock_qty: 2, weight_grams: 75, organization_id: 1 },
+      ];
+      repo.findByText.mockResolvedValue(products as any);
+
+      await service.searchProducts('apenas termo');
+
+      expect(loggerSpy).toHaveBeenCalledWith(
+        JSON.stringify({
+          message: 'SmartSearch Event',
+          input_text: 'apenas termo',
+          generated_filters: insufficientFilters,
+          ai_success: true,
+          fallback_applied: true,
+        })
+      );
+    });
   });
 });
