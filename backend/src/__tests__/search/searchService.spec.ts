@@ -2,25 +2,29 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SearchService } from '../../search/searchService';
 import { SearchRepository } from '../../search/searchRepository';
 import { LlmApiService } from '../../search/llmApiService';
+import { SearchMetricsService } from '../../search/searchMetricsService';
 import { Logger } from '@nestjs/common';
 
 describe('SearchService', () => {
   let service: SearchService;
   let repo: jest.Mocked<SearchRepository>;
   let llm: jest.Mocked<LlmApiService>;
+  let metrics: jest.Mocked<SearchMetricsService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SearchService,
-        { provide: SearchRepository, useValue: { findByText: jest.fn(), findByFilters: jest.fn() } },
+        { provide: SearchRepository, useValue: { findByText: jest.fn(), findByFilters: jest.fn(), findByTextFullText: jest.fn() } },
         { provide: LlmApiService, useValue: { getFilters: jest.fn() } },
+        { provide: SearchMetricsService, useValue: { trackSearch: jest.fn() } },
       ],
     }).compile();
 
     service = module.get(SearchService);
     repo = module.get(SearchRepository) as any;
     llm = module.get(LlmApiService) as any;
+    metrics = module.get(SearchMetricsService) as any;
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -30,10 +34,10 @@ describe('SearchService', () => {
     const products = [
       { id: 1, name: 'Produto A', description: 'Desc', price: 10, category: 'Doces', image_url: '', stock_qty: 1, weight_grams: 100, organization_id: 1 },
     ];
-    repo.findByText.mockResolvedValue(products as any);
+    repo.findByTextFullText.mockResolvedValue(products as any);
 
     const out = await service.searchProducts('doces até 50');
-    expect(repo.findByText).toHaveBeenCalledWith('doces até 50');
+    expect(repo.findByTextFullText).toHaveBeenCalledWith('doces até 50');
     expect(out).toEqual({
       interpretation: 'Buscando por texto: "doces até 50"',
       ai_used: false,
@@ -47,10 +51,10 @@ describe('SearchService', () => {
     const products = [
       { id: 2, name: 'Bolo', description: 'Chocolate', price: 20, category: 'Doces', image_url: '', stock_qty: 5, weight_grams: 200, organization_id: 1 },
     ];
-    repo.findByText.mockResolvedValue(products as any);
+    repo.findByTextFullText.mockResolvedValue(products as any);
 
     const out = await service.searchProducts('bolo');
-    expect(repo.findByText).toHaveBeenCalledWith('bolo');
+    expect(repo.findByTextFullText).toHaveBeenCalledWith('bolo');
     expect(out.ai_used).toBe(false);
     expect(out.fallback_applied).toBe(true);
   });
@@ -141,10 +145,10 @@ describe('SearchService', () => {
     const products = [
       { id: 8, name: 'Produto Genérico', description: 'Teste', price: 15, category: 'Geral', image_url: '', stock_qty: 1, weight_grams: 100, organization_id: 1 },
     ];
-    repo.findByText.mockResolvedValue(products as any);
+    repo.findByTextFullText.mockResolvedValue(products as any);
 
     const out = await service.searchProducts('busca vaga');
-    expect(repo.findByText).toHaveBeenCalledWith('busca vaga');
+    expect(repo.findByTextFullText).toHaveBeenCalledWith('busca vaga');
     expect(out.ai_used).toBe(false);
     expect(out.fallback_applied).toBe(true);
   });
@@ -186,7 +190,7 @@ describe('SearchService', () => {
       const products = [
         { id: 2, name: 'Produto', description: 'Desc', price: 10, category: 'Geral', image_url: '', stock_qty: 1, weight_grams: 50, organization_id: 1 },
       ];
-      repo.findByText.mockResolvedValue(products as any);
+      repo.findByTextFullText.mockResolvedValue(products as any);
 
       await service.searchProducts('busca qualquer');
 
@@ -207,7 +211,7 @@ describe('SearchService', () => {
       const products = [
         { id: 3, name: 'Produto', description: 'Desc', price: 15, category: 'Geral', image_url: '', stock_qty: 2, weight_grams: 75, organization_id: 1 },
       ];
-      repo.findByText.mockResolvedValue(products as any);
+      repo.findByTextFullText.mockResolvedValue(products as any);
 
       await service.searchProducts('apenas termo');
 

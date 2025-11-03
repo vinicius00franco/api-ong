@@ -7,7 +7,7 @@ import { IAIFilters } from './searchTypes';
 export class LlmApiService {
   private readonly logger = new Logger(LlmApiService.name);
   private readonly LLM_API_URL = process.env.LLM_API_URL;
-  private readonly LLM_TIMEOUT = parseInt(process.env.LLM_TIMEOUT || '3000', 10);
+  private readonly LLM_TIMEOUT = parseInt(process.env.LLM_TIMEOUT || '2000', 10);
 
   constructor(private readonly httpService: HttpService) {
     if (!this.LLM_API_URL) {
@@ -17,6 +17,7 @@ export class LlmApiService {
 
   async getFilters(query: string): Promise<IAIFilters | null> {
     try {
+      this.logger.log(`Chamando LLM API para: "${query.substring(0, 50)}..."`);
       const response$ = this.httpService
         .post(this.LLM_API_URL as string, { query })
         .pipe(
@@ -27,9 +28,10 @@ export class LlmApiService {
           }),
         );
 
-  const response: any = await firstValueFrom(response$);
-  if (!response || !response.data) return null;
-  return response.data as IAIFilters;
+      const response: any = await firstValueFrom(response$);
+      if (!response || !response.data) return null;
+      this.logger.log(`LLM retornou filtros: ${JSON.stringify(response.data)}`);
+      return response.data as IAIFilters;
     } catch (e: any) {
       this.logger.error(`Erro inesperado ao chamar LLM API: ${e?.message || e}`);
       return null;

@@ -8,6 +8,7 @@ export interface PublicProduct {
   stock_qty: number;
   weight_grams: number;
   organization_id: number;
+  rank?: number; // Para full-text search ranking
 }
 
 export interface PublicCatalogFilters {

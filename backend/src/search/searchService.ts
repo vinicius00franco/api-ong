@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { IAIFilters, ISearchResponse } from './searchTypes';
 import { SearchRepository } from './searchRepository';
 import { LlmApiService } from './llmApiService';
+import { SearchMetricsService } from './searchMetricsService';
 
 @Injectable()
 export class SearchService {
@@ -10,16 +11,29 @@ export class SearchService {
   constructor(
     private readonly repository: SearchRepository,
     private readonly llmApi: LlmApiService,
+    private readonly metrics: SearchMetricsService,
   ) {}
 
-  async searchProducts(query: string): Promise<ISearchResponse> {
+  async searchProducts(query: string, userId?: string): Promise<ISearchResponse> {
+    const startTime = Date.now();
     const aiFilters = await this.llmApi.getFilters(query);
     const aiSuccess = !!aiFilters;
 
     if (!aiSuccess || this.areFiltersInsufficient(aiFilters)) {
       const fallbackApplied = true;
       this.logSearchEvent(query, aiFilters, aiSuccess, fallbackApplied);
-      const products = await this.repository.findByText(query);
+      const products = await this.repository.findByTextFullText(query);
+      const latencyMs = Date.now() - startTime;
+      
+      await this.metrics.trackSearch({
+        query,
+        aiUsed: false,
+        fallbackApplied: true,
+        resultsCount: products.length,
+        latencyMs,
+        userId,
+      });
+      
       return this.formatFallbackResponse(query, products);
     }
 
@@ -27,6 +41,17 @@ export class SearchService {
     this.logSearchEvent(query, aiFilters, aiSuccess, fallbackApplied);
 
     const products = await this.repository.findByFilters(aiFilters as IAIFilters);
+    const latencyMs = Date.now() - startTime;
+    
+    await this.metrics.trackSearch({
+      query,
+      aiUsed: true,
+      fallbackApplied: false,
+      resultsCount: products.length,
+      latencyMs,
+      userId,
+    });
+    
     return this.formatSmartResponse(query, aiFilters as IAIFilters, products);
   }
 

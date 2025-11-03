@@ -5,6 +5,7 @@ import { IAIFilters } from './searchTypes';
 
 export interface ISearchRepository {
   findByText(term: string): Promise<PublicProduct[]>;
+  findByTextFullText(term: string): Promise<PublicProduct[]>;
   findByFilters(filters: IAIFilters): Promise<PublicProduct[]>;
 }
 
@@ -20,6 +21,22 @@ export class SearchRepository implements ISearchRepository {
     `;
     const params = [`%${term}%`];
     const result = await getDb().query(query, params);
+    return result.rows;
+  }
+
+  async findByTextFullText(term: string): Promise<PublicProduct[]> {
+    const query = `
+      SELECT 
+        p.id, p.name, p.description, p.price, 
+        c.name as category, p.image_url, p.stock_qty, 
+        p.weight_grams, p.organization_id,
+        ts_rank(p.search_vector, plainto_tsquery('portuguese', $1)) as rank
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.search_vector @@ plainto_tsquery('portuguese', $1)
+      ORDER BY rank DESC, p.id DESC
+    `;
+    const result = await getDb().query(query, [term]);
     return result.rows;
   }
 

@@ -27,3 +27,8 @@ class IQueryRepository(ABC):
     async def update_query_status(self, query_id: str, status: str) -> bool:
         """Atualiza o status de uma query"""
         pass
+
+    @abstractmethod
+    async def find_cached_query(self, query_text: str) -> Optional[Dict[str, Any]]:
+        """Busca query similar no cache (últimas 24h)"""
+        pass

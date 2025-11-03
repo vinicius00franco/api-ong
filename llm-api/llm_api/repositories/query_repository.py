@@ -321,6 +321,75 @@ class QueryRepository(IQueryRepository):
                 logger.error(f"Erro ao atualizar status de {query_id}: {e}")
                 raise
 
+    async def find_cached_query(self, query_text: str) -> Optional[Dict[str, Any]]:
+        """
+        Busca query similar processada nas últimas 24h para economizar chamadas LLM.
+        Normaliza a query para melhorar cache hit rate.
+        """
+        normalized = self._normalize_query(query_text)
+        
+        if self._memory_enabled:
+            for qid in reversed(self._mem_order):
+                rec = self._mem_store[qid]
+                if self._normalize_query(rec['query_text']) == normalized:
+                    logger.info(f"[MEM] Cache HIT para: {query_text}")
+                    return rec
+            logger.info(f"[MEM] Cache MISS para: {query_text}")
+            return None
+        else:
+            try:
+                if self._conn is not None:
+                    row = await self._conn.fetchrow(
+                        """
+                        SELECT id, query_text, filters::TEXT as filters, created_at
+                        FROM queries
+                        WHERE LOWER(TRIM(REGEXP_REPLACE(query_text, '\\s+', ' ', 'g'))) = $1
+                        AND created_at > NOW() - INTERVAL '24 hours'
+                        AND status = 'processed'
+                        ORDER BY created_at DESC
+                        LIMIT 1
+                        """,
+                        normalized
+                    )
+                else:
+                    async with self.db_pool.acquire() as conn:
+                        row = await conn.fetchrow(
+                            """
+                            SELECT id, query_text, filters::TEXT as filters, created_at
+                            FROM queries
+                            WHERE LOWER(TRIM(REGEXP_REPLACE(query_text, '\\s+', ' ', 'g'))) = $1
+                            AND created_at > NOW() - INTERVAL '24 hours'
+                            AND status = 'processed'
+                            ORDER BY created_at DESC
+                            LIMIT 1
+                            """,
+                            normalized
+                        )
+                
+                if row:
+                    logger.info(f"Cache HIT para: {query_text}")
+                    return {
+                        'id': row['id'],
+                        'query_text': row['query_text'],
+                        'filters': json.loads(row['filters']),
+                        'created_at': row['created_at'].isoformat() if row['created_at'] else None
+                    }
+                else:
+                    logger.info(f"Cache MISS para: {query_text}")
+                    return None
+            except asyncpg.PostgresError as e:
+                logger.error(f"Erro ao buscar cache: {e}")
+                return None
+
+    @staticmethod
+    def _normalize_query(query: str) -> str:
+        """Normaliza query para melhorar cache hit rate"""
+        import re
+        normalized = query.lower().strip()
+        normalized = re.sub(r'\s+', ' ', normalized)
+        normalized = normalized.replace('reais', '').replace('r$', '')
+        return normalized.strip()
+
     @staticmethod
     def _generate_id() -> str:
         """

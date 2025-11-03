@@ -45,26 +45,33 @@ class QueryService:
     ) -> tuple[FiltrosBusca, str]:
         """
         Processa query em linguagem natural e salva no banco
+        OTIMIZAÇÃO: Verifica cache ANTES de chamar LLM
         Retorna: (FiltrosBusca, query_id)
         """
         logger.info(f"Iniciando parse de query: {query_input.query}")
 
-        # 1. Parse via LLM
+        # 1. VERIFICA CACHE PRIMEIRO (economia de tokens LLM)
+        cached = await self._repository.find_cached_query(query_input.query)
+        if cached:
+            logger.info(f"Cache hit! Economizou 1 chamada LLM. Reusando query_id: {cached['id']}")
+            return FiltrosBusca(**cached['filters']), cached['id']
+
+        # 2. Parse via LLM (só se não encontrou no cache)
         filtros = await self._parse_query(query_input.query)
         logger.debug(f"Filtros extraídos: {filtros.model_dump()}")
 
-        # 2. Valida filtros
+        # 3. Valida filtros
         if not self.validate_filters(filtros):
             logger.warning("Filtros inválidos, aplicando fallback")
             filtros = FiltrosBusca(search_term=query_input.query)
 
-        # 3. Salva no banco
+        # 4. Salva no banco
         query_id = await self._repository.save_query(
             query_input.query, filtros.model_dump()
         )
         logger.info(f"Query salva com ID: {query_id}")
 
-        # 4. Atualiza status
+        # 5. Atualiza status
         await self._repository.update_query_status(query_id, "processed")
 
         return filtros, query_id
@@ -98,25 +105,14 @@ class QueryService:
     @staticmethod
     def _build_prompt(query_text: str) -> str:
         """
-        Constrói o prompt para o LLM
-        S de SOLID: Responsabilidade única - construção do prompt
+        Prompt minimalista para reduzir custos de tokens
         """
-        return f"""
-Você é um assistente de e-commerce. Seu trabalho é extrair filtros de busca 
-de uma consulta em linguagem natural do usuário.
+        return f"""Extraia filtros JSON da busca: "{query_text}"
+Campos: search_term, category, price_min, price_max
+Categorias: Doces, Bebidas, Artesanato, Limpeza, Alimentos
+price_max: "até X" ou "menos de X"
+price_min: "a partir de X" ou "mais de X"""
 
-A consulta do usuário é:
-"{query_text}"
-
-Analise a consulta e retorne um objeto JSON que corresponda ao 
-schema de filtros fornecido.
-
-- 'price_max': Se o usuário disser "até X reais" ou "menos de X".
-- 'price_min': Se o usuário disser "a partir de X reais" ou "mais de X".
-- 'category': Tente identificar categorias como 'Doces', 'Bebidas', 'Artesanato'.
-- 'search_term': Use para palavras-chave que parecem ser nomes de produtos ou descrições.
-- Se a consulta for vaga, apenas retorne o 'search_term'.
-"""
 
     def validate_filters(self, filtros: FiltrosBusca) -> bool:
         """

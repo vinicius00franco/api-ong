@@ -32,3 +32,6 @@ class MockQueryRepository(IQueryRepository):
 
     async def update_query_status(self, query_id: str, status: str) -> bool:
         return query_id == "mock-id-123"
+
+    async def find_cached_query(self, query_text: str) -> Optional[Dict[str, Any]]:
+        return None

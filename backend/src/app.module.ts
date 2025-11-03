@@ -10,6 +10,7 @@ import { OrderModule } from './orders/orderModule';
 import { OrganizationModule } from './organizations/organizationModule';
 import { pool } from './lib/database';
 import { RequestLoggingMiddleware } from './lib/requestLoggingMiddleware';
+import { RateLimitMiddleware } from './middleware/rateLimitMiddleware';
 
 @Module({
   imports: [
@@ -33,5 +34,6 @@ import { RequestLoggingMiddleware } from './lib/requestLoggingMiddleware';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(RequestLoggingMiddleware).forRoutes('*');
+    consumer.apply(RateLimitMiddleware).forRoutes('*');
   }
 }
