@@ -282,7 +282,52 @@ curl "http://localhost:3000/public/catalog?page=1&limit=10&category=Doce&priceMi
 curl "http://localhost:3000/public/search?q=doces até 20 reais"
 ```
 
-### 5. Pedidos (Requer Autenticação)
+### 6. Organizações (Requer Autenticação)
+
+#### POST /organizations/:id/users
+**Descrição:** Cria um novo usuário dentro da organização especificada. Apenas administradores da organização podem criar usuários.
+
+**Parâmetros de URL:**
+- `id`: number (ID da organização)
+
+**Corpo da Requisição:**
+```json
+{
+  "name": "string",
+  "email": "string",
+  "password": "string",
+  "role": "string (opcional, padrão: 'user')" // 'user' ou 'admin'
+}
+```
+
+**Resposta de Sucesso:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Nome do Usuário",
+    "email": "usuario@example.com",
+    "role": "user",
+    "organizationId": 1
+  }
+}
+```
+
+**Códigos de Erro:**
+- `400`: Dados inválidos (validação Zod)
+- `403`: Operação não permitida para esta organização (multi-tenancy)
+- `409`: Usuário já existe com este email
+
+**Exemplo:**
+```bash
+curl -X POST http://localhost:3000/organizations/1/users \
+  -H "Authorization: Bearer <jwt_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "João Silva", "email": "joao@example.com", "password": "senha123", "role": "user"}'
+```
+
+### 7. Pedidos (Requer Autenticação)
 
 #### POST /orders
 **Descrição:** Cria um novo pedido.
@@ -371,7 +416,7 @@ curl "http://localhost:3000/public/search?q=doces até 20 reais"
 
 **Resposta de Sucesso:** Mesmo formato que POST /orders.
 
-### 7. Categorias
+### 8. Categorias
 
 #### GET /categories
 **Descrição:** Lista todas as categorias disponíveis.
@@ -395,7 +440,7 @@ curl "http://localhost:3000/public/search?q=doces até 20 reais"
 curl http://localhost:3000/categories
 ```
 
-### 8. Health Check
+### 9. Health Check
 
 #### GET /health
 **Descrição:** Verifica o status da aplicação.

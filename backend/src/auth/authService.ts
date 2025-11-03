@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthRepository } from './authRepository';
@@ -48,5 +48,29 @@ export class AuthService {
       registerData.email,
       registerData.password
     );
+  }
+
+  async createUser(createUserData: { name: string; email: string; password: string; role?: 'user' | 'admin' }, organizationId: number): Promise<{ id: number; name: string; email: string; role: string; organizationId: number }> {
+    // Check if user already exists
+    const existingUser = await this.authRepository.findUserByEmail(createUserData.email);
+    if (existingUser) {
+      throw new ConflictException('User already exists with this email');
+    }
+
+    const user = await this.authRepository.createUser({
+      name: createUserData.name,
+      email: createUserData.email,
+      password: createUserData.password,
+      role: createUserData.role || 'user',
+      organizationId,
+    });
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      organizationId: user.organizationId,
+    };
   }
 }

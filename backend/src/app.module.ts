@@ -10,6 +10,7 @@ import { OrderModule } from './orders/orderModule';
 import { OrganizationModule } from './organizations/organizationModule';
 import { pool } from './lib/database';
 import { RequestLoggingMiddleware } from './lib/requestLoggingMiddleware';
+import { DashboardModule } from './dashboard/dashboardModule';
 import { RateLimitMiddleware } from './middleware/rateLimitMiddleware';
 
 @Module({
@@ -23,6 +24,7 @@ import { RateLimitMiddleware } from './middleware/rateLimitMiddleware';
     SearchModule,
     OrderModule,
     OrganizationModule,
+    DashboardModule,
   ],
   providers: [
     {

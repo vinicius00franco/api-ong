@@ -1,17 +1,12 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
 import { OrganizationController } from './organizationController';
 import { OrganizationService } from './organizationService';
 import { OrganizationRepository } from './organizationRepository';
 import { AuthGuard } from '../middleware/authMiddleware';
+import { AuthModule } from '../auth/authModule';
 
 @Module({
-  imports: [
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '1h' },
-    }),
-  ],
+  imports: [AuthModule],
   controllers: [OrganizationController],
   providers: [OrganizationService, OrganizationRepository, AuthGuard],
   exports: [OrganizationService],

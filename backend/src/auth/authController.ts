@@ -1,10 +1,11 @@
-import { Controller, Post, Body, UsePipes } from '@nestjs/common';
+import { Controller, Post, Body, UsePipes, UseGuards, Request } from '@nestjs/common';
 import { ZodValidationPipe } from '../lib/zodValidationPipe';
 import { AuthService } from './authService';
-import { loginSchema, LoginInput, registerSchema, RegisterInput } from './authSchemas';
+import { loginSchema, LoginInput, registerSchema, RegisterInput, createUserSchema, CreateUserInput } from './authSchemas';
 import { LoginResponse } from './authTypes';
 import { HandleErrors } from '../lib/handleErrors';
 import { ApiResponse } from '../lib/apiResponse';
+import { AuthGuard } from '../middleware/authMiddleware';
 
 @Controller('auth')
 export class AuthController {
@@ -27,6 +28,18 @@ export class AuthController {
     @Body() registerInput: RegisterInput,
   ): Promise<ApiResponse<{ id: number; name: string; email: string }>> {
     const result = await this.authService.register(registerInput);
+    return ApiResponse.success(result);
+  }
+
+  @Post('users')
+  @UseGuards(AuthGuard)
+  @UsePipes(new ZodValidationPipe(createUserSchema))
+  @HandleErrors()
+  async createUser(
+    @Body() createUserInput: CreateUserInput,
+    @Request() req: any,
+  ): Promise<ApiResponse<{ id: number; name: string; email: string; role: string; organizationId: number }>> {
+    const result = await this.authService.createUser(createUserInput, req.organizationId);
     return ApiResponse.success(result);
   }
 }

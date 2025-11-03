@@ -16,7 +16,6 @@ export const createUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   role: z.enum(['user', 'admin']).optional().default('user'),
-  organizationId: z.number(),
 });
 
 export const updateUserSchema = z.object({
