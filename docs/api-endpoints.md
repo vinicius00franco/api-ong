@@ -440,7 +440,102 @@ curl -X POST http://localhost:3000/organizations/1/users \
 curl http://localhost:3000/categories
 ```
 
-### 9. Health Check
+### 9. Dashboard (Requer Autenticação)
+
+#### GET /dashboard/stats
+**Descrição:** Obtém estatísticas completas do dashboard da organização autenticada.
+
+**Resposta de Sucesso:**
+```json
+{
+  "success": true,
+  "data": {
+    "totalProducts": 25,
+    "totalOrganizations": 1,
+    "totalCategories": 5,
+    "totalInventoryValue": 15750.50,
+    "averageProductPrice": 35.75,
+    "totalStockQuantity": 450,
+    "productsByCategory": [
+      {
+        "category": "Doces",
+        "count": 10,
+        "percentage": 40.0
+      },
+      {
+        "category": "Salgados",
+        "count": 8,
+        "percentage": 32.0
+      }
+    ],
+    "productsByOrganization": [
+      {
+        "organization": "ONG Exemplo",
+        "count": 25,
+        "stock": 450
+      }
+    ],
+    "recentProducts": [
+      {
+        "id": 123,
+        "name": "Brigadeiro Gourmet",
+        "price": 15.99,
+        "category": "Doces",
+        "organization": "ONG Exemplo",
+        "createdAt": "2025-01-11T10:30:00.000Z"
+      }
+    ],
+    "searchMetrics": {
+      "totalSearches": 150,
+      "aiUsageRate": 85.5,
+      "fallbackRate": 12.3,
+      "averageLatency": 245.8
+    }
+  }
+}
+```
+
+**Exemplo:**
+```bash
+curl -H "Authorization: Bearer <jwt_token>" http://localhost:3000/dashboard/stats
+```
+
+#### GET /dashboard/activities
+**Descrição:** Obtém atividades recentes da organização autenticada.
+
+**Resposta de Sucesso:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "product_123",
+      "user": "Sistema",
+      "action": "adicionou",
+      "target": "Brigadeiro Gourmet",
+      "timestamp": "2025-01-11T10:30:00.000Z",
+      "icon": "package",
+      "type": "product"
+    },
+    {
+      "id": "search_456",
+      "user": "Usuário",
+      "action": "pesquisou",
+      "target": "doces até 20 reais",
+      "timestamp": "2025-01-11T09:15:00.000Z",
+      "icon": "search",
+      "type": "search"
+    }
+  ]
+}
+```
+
+**Exemplo:**
+```bash
+curl -H "Authorization: Bearer <jwt_token>" http://localhost:3000/dashboard/activities
+```
+
+### 10. Health Check
 
 #### GET /health
 **Descrição:** Verifica o status da aplicação.
@@ -463,7 +558,7 @@ curl http://localhost:3000/health
 - `201`: Criado
 - `400`: Requisição inválida
 - `401`: Não autorizado
-- `404`: Não encontrado
+- `404`: Não encontradontrado
 - `500`: Erro interno do servidor
 
 ## Convenções
