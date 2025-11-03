@@ -7,6 +7,7 @@ import { CategoryModule } from './categories/categoryModule';
 import { PublicCatalogModule } from './public/publicCatalogModule';
 import { SearchModule } from './search/searchModule';
 import { OrderModule } from './orders/orderModule';
+import { OrganizationModule } from './organizations/organizationModule';
 import { pool } from './lib/database';
 import { RequestLoggingMiddleware } from './lib/requestLoggingMiddleware';
 
@@ -20,6 +21,7 @@ import { RequestLoggingMiddleware } from './lib/requestLoggingMiddleware';
     PublicCatalogModule,
     SearchModule,
     OrderModule,
+    OrganizationModule,
   ],
   providers: [
     {

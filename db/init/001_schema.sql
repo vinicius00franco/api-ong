@@ -9,6 +9,17 @@ CREATE TABLE organizations (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create users table
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+    organization_id INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create categories table
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
@@ -57,6 +68,8 @@ CREATE TABLE order_items (
 );
 
 -- Indexes for performance
+CREATE INDEX idx_users_organization_id ON users(organization_id);
+CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_products_organization_id ON products(organization_id);
 CREATE INDEX idx_products_category_id ON products(category_id);
 CREATE INDEX idx_order_items_order_id ON order_items(order_id);
