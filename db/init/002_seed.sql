@@ -1,9 +1,9 @@
 -- 002_seed.sql: Seed data for ONG API
 
--- Insert organizations
+-- Insert organizations (password = 'password' hashed with bcrypt)
 INSERT INTO organizations (name, email, password_hash) VALUES
-('ONG A', 'onga@example.com', 'password'),  -- In production, use hashed passwords
-('ONG B', 'ongb@example.com', 'password');
+('ONG A', 'onga@example.com', '$2b$10$S0BAdjm.thNhR8Zl.01bAegxO7dbFTTmqlCKTRPSN.CvnCQmTChtS'),
+('ONG B', 'ongb@example.com', '$2b$10$S0BAdjm.thNhR8Zl.01bAegxO7dbFTTmqlCKTRPSN.CvnCQmTChtS');
 
 -- Insert categories
 INSERT INTO categories (name) VALUES

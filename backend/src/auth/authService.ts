@@ -35,4 +35,18 @@ export class AuthService {
       organization_id: organization.id,
     };
   }
+
+  async register(registerData: { name: string; email: string; password: string }): Promise<{ id: number; name: string; email: string }> {
+    // Check if organization already exists
+    const existingOrg = await this.authRepository.findOrganizationByEmail(registerData.email);
+    if (existingOrg) {
+      throw new UnauthorizedException('Organization already exists with this email');
+    }
+
+    return await this.authRepository.createOrganization(
+      registerData.name,
+      registerData.email,
+      registerData.password
+    );
+  }
 }

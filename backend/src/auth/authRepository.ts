@@ -11,6 +11,17 @@ export class AuthRepository implements IAuthRepository {
     return result.rows[0] || null;
   }
 
+  async createOrganization(name: string, email: string, password: string): Promise<{ id: number; name: string; email: string }> {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const query = `
+      INSERT INTO organizations (name, email, password_hash)
+      VALUES ($1, $2, $3)
+      RETURNING id, name, email
+    `;
+    const result = await getDb().query(query, [name, email, hashedPassword]);
+    return result.rows[0];
+  }
+
   async findUserByEmail(email: string): Promise<User | null> {
     const query = 'SELECT id, name, email, password_hash, role, organization_id, created_at FROM users WHERE email = $1';
     const result = await getDb().query(query, [email]);
