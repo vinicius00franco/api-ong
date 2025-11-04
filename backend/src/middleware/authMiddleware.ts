@@ -26,6 +26,8 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException('Invalid organization');
       }
       request.organizationId = orgResult.rows[0].id;
+      // Also expose the UUID for responses/logging when needed
+      request.organizationUuid = payload.organizationId;
       request.userId = payload.sub;
       return true;
     } catch (error) {

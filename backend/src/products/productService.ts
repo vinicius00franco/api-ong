@@ -10,18 +10,18 @@ export class ProductService {
     private categoryRepository: CategoryRepository,
   ) {}
 
-  async create(product: CreateProductRequest, organizationId: string): Promise<Product> {
+  async create(product: CreateProductRequest, organizationId: number): Promise<Product> {
     if (!(await this.categoryRepository.exists(product.categoryId))) {
       throw new BadRequestException('Invalid categoryId');
     }
     return this.productRepository.create({ ...product, organizationId });
   }
 
-  async findAll(organizationId: string): Promise<Product[]> {
+  async findAll(organizationId: number): Promise<Product[]> {
     return this.productRepository.findAll(organizationId);
   }
 
-  async findById(id: string, organizationId: string): Promise<Product> {
+  async findById(id: string, organizationId: number): Promise<Product> {
     const product = await this.productRepository.findById(id, organizationId);
     if (!product) {
       throw new NotFoundException('Product not found');
@@ -29,7 +29,7 @@ export class ProductService {
     return product;
   }
 
-  async update(id: string, organizationId: string, updates: UpdateProductRequest): Promise<Product> {
+  async update(id: string, organizationId: number, updates: UpdateProductRequest): Promise<Product> {
     if (updates.categoryId !== undefined) {
       if (!(await this.categoryRepository.exists(updates.categoryId))) {
         throw new BadRequestException('Invalid categoryId');
@@ -42,7 +42,7 @@ export class ProductService {
     return product;
   }
 
-  async delete(id: string, organizationId: string): Promise<void> {
+  async delete(id: string, organizationId: number): Promise<void> {
     const deleted = await this.productRepository.delete(id, organizationId);
     if (!deleted) {
       throw new NotFoundException('Product not found');

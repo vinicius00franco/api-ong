@@ -4,7 +4,7 @@ import { IProductRepository, Product, CreateProductRequest, UpdateProductRequest
 
 @Injectable()
 export class ProductRepository implements IProductRepository {
-  async create(product: CreateProductRequest & { organizationId: string }): Promise<Product> {
+  async create(product: CreateProductRequest & { organizationId: number }): Promise<Product> {
     const query = `
       INSERT INTO products (name, description, price, category_id, image_url, stock_qty, weight_grams, organization_id)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -25,19 +25,19 @@ export class ProductRepository implements IProductRepository {
     return this.mapRowToProduct(row);
   }
 
-  async findAll(organizationId: string): Promise<Product[]> {
+  async findAll(organizationId: number): Promise<Product[]> {
     const query = 'SELECT * FROM products WHERE organization_id = $1';
     const result = await getDb().query(query, [organizationId]);
     return result.rows.map(row => this.mapRowToProduct(row));
   }
 
-  async findById(id: string, organizationId: string): Promise<Product | null> {
+  async findById(id: string, organizationId: number): Promise<Product | null> {
     const query = 'SELECT * FROM products WHERE id = $1 AND organization_id = $2';
     const result = await getDb().query(query, [id, organizationId]);
     return result.rows[0] ? this.mapRowToProduct(result.rows[0]) : null;
   }
 
-  async update(id: string, organizationId: string, updates: UpdateProductRequest): Promise<Product | null> {
+  async update(id: string, organizationId: number, updates: UpdateProductRequest): Promise<Product | null> {
     const fields: string[] = [];
     const values: any[] = [];
     let paramIndex = 1;
@@ -75,7 +75,7 @@ export class ProductRepository implements IProductRepository {
     return result.rows[0] ? this.mapRowToProduct(result.rows[0]) : null;
   }
 
-  async delete(id: string, organizationId: string): Promise<boolean> {
+  async delete(id: string, organizationId: number): Promise<boolean> {
     const query = 'DELETE FROM products WHERE id = $1 AND organization_id = $2';
     const result = await getDb().query(query, [id, organizationId]);
     return (result.rowCount ?? 0) > 0;

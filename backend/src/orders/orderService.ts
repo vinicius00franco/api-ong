@@ -13,7 +13,7 @@ export class OrderService {
   async create(orderData: CreateOrderDto, organizationId: number): Promise<OrderResponse> {
     // Validate all products exist and belong to the organization
     for (const item of orderData.items) {
-      const product = await this.productRepository.findById(item.productId.toString(), organizationId.toString());
+      const product = await this.productRepository.findById(item.productId.toString(), organizationId);
       if (!product) {
         throw new BadRequestException(`Product ${item.productId} not found or not accessible`);
       }

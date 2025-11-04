@@ -7,7 +7,7 @@ export interface Product {
   imageUrl: string;
   stockQty: number;
   weightGrams: number;
-  organizationId: string;
+  organizationId: number;
   createdAt: Date;
 }
 
@@ -32,9 +32,9 @@ export interface UpdateProductRequest {
 }
 
 export interface IProductRepository {
-  create(product: CreateProductRequest & { organizationId: string }): Promise<Product>;
-  findAll(organizationId: string): Promise<Product[]>;
-  findById(id: string, organizationId: string): Promise<Product | null>;
-  update(id: string, organizationId: string, updates: UpdateProductRequest): Promise<Product | null>;
-  delete(id: string, organizationId: string): Promise<boolean>;
+  create(product: CreateProductRequest & { organizationId: number }): Promise<Product>;
+  findAll(organizationId: number): Promise<Product[]>;
+  findById(id: string, organizationId: number): Promise<Product | null>;
+  update(id: string, organizationId: number, updates: UpdateProductRequest): Promise<Product | null>;
+  delete(id: string, organizationId: number): Promise<boolean>;
 }
