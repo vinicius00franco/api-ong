@@ -5,7 +5,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   accessToken: string;
-  organizationId: string;
+  organizationUuid: string;
 }
 
 export interface JWTPayload {
@@ -40,7 +40,7 @@ export interface UpdateUserRequest {
 }
 
 export interface IAuthRepository {
-  findOrganizationByEmail(email: string): Promise<{ id: string; passwordHash: string } | null>;
+  findOrganizationByEmail(email: string): Promise<{ id: number; uuid: string; passwordHash: string } | null>;
   findUserByEmail(email: string): Promise<User | null>;
   createUser(user: CreateUserRequest): Promise<User>;
   updateUser(id: number, updates: UpdateUserRequest): Promise<User | null>;

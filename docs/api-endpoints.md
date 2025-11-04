@@ -16,6 +16,28 @@ Todas as respostas seguem o formato `ApiResponse<T>`:
 
 Em caso de erro:
 
+# Documentação da API - ONG System
+
+Esta documentação descreve os endpoints da API do sistema (NestJS). Todas as rotas do backend possuem prefixo base:
+
+- Base URL: http://localhost:3000/api
+
+Inclui também a busca inteligente via IA (LLM) com fallback.
+
+## Formato de Resposta Padrão
+
+Todas as respostas seguem o formato `ApiResponse<T>`:
+
+```json
+{
+  "success": true,
+  "data": T,
+  "message": "string (opcional)"
+}
+```
+
+Em caso de erro:
+
 ```json
 {
   "success": false,
@@ -34,522 +56,203 @@ Authorization: Bearer <jwt_token>
 
 ## Endpoints
 
-### 1. Autenticação
+### 1) Autenticação
 
-#### POST /auth/login
-**Descrição:** Realiza login de uma organização e retorna um token JWT.
+#### POST /api/auth/login
+Realiza login e retorna um token JWT.
 
-**Corpo da Requisição:**
+Corpo:
 ```json
-{
-  "email": "string",
-  "password": "string"
-}
+{ "email": "string", "password": "string" }
 ```
 
-**Resposta de Sucesso:**
-```json
-{
-  "success": true,
-  "data": {
-    "accessToken": "string",
-    "organizationId": "string"
-  }
-}
-```
-
-**Exemplo:**
+Exemplo:
 ```bash
-curl -X POST http://localhost:3000/auth/login \
+curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "ong@example.com", "password": "password123"}'
 ```
 
-#### POST /auth/register
-**Descrição:** Registra uma nova organização no sistema.
+#### POST /api/auth/register
+Registra uma nova organização.
 
-**Corpo da Requisição:**
+Corpo:
 ```json
-{
-  "name": "string",
-  "email": "string",
-  "password": "string"
-}
+{ "name": "string", "email": "string", "password": "string" }
 ```
 
-**Resposta de Sucesso:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "name": "Nome da ONG",
-    "email": "ong@example.com"
-  }
-}
-```
-
-**Exemplo:**
+Exemplo:
 ```bash
-curl -X POST http://localhost:3000/auth/register \
+curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"name": "ONG Exemplo", "email": "ong@example.com", "password": "password123"}'
 ```
 
-### 2. Produtos (Requer Autenticação)
+#### POST /api/auth/users (criar usuário autenticado)
+Cria usuário na organização do token (requer admin).
 
-#### POST /products
-**Descrição:** Cria um novo produto para a organização autenticada.
+Exemplo:
+```bash
+curl -X POST http://localhost:3000/api/auth/users \
+  -H "Authorization: Bearer <jwt_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Maria","email":"maria@example.com","password":"senha123","role":"user"}'
+```
 
-**Corpo da Requisição:**
+### 2) Produtos (Requer Autenticação)
+
+#### POST /api/products
+Cria um produto para a organização autenticada.
+
+Corpo:
 ```json
 {
   "name": "string",
   "description": "string",
-  "price": "number",
-  "categoryId": "number",
-  "imageUrl": "string",
-  "stockQty": "number",
-  "weightGrams": "number"
+  "price": 10.99,
+  "categoryId": 1,
+  "imageUrl": "http://example.com/image.jpg",
+  "stockQty": 100,
+  "weightGrams": 500
 }
 ```
 
-**Resposta de Sucesso:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "string",
-    "name": "string",
-    "description": "string",
-    "price": 10.99,
-    "categoryId": 1,
-    "imageUrl": "http://example.com/image.jpg",
-    "stockQty": 100,
-    "weightGrams": 500,
-    "organizationId": "string",
-    "createdAt": "2025-11-03T00:00:00.000Z"
-  }
-}
-```
+#### GET /api/products
+Lista produtos da organização autenticada.
 
-#### GET /products
-**Descrição:** Lista todos os produtos da organização autenticada.
+#### GET /api/products/:id
+Obtém um produto por ID.
 
-**Resposta de Sucesso:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "string",
-      "name": "string",
-      "description": "string",
-      "price": 10.99,
-      "categoryId": 1,
-      "imageUrl": "http://example.com/image.jpg",
-      "stockQty": 100,
-      "weightGrams": 500,
-      "organizationId": "string",
-      "createdAt": "2025-11-03T00:00:00.000Z"
-    }
-  ]
-}
-```
+#### PUT /api/products/:id
+Atualiza um produto.
 
-#### GET /products/:id
-**Descrição:** Obtém um produto específico por ID.
+#### DELETE /api/products/:id
+Remove um produto.
 
-**Parâmetros de URL:**
-- `id`: string (ID do produto)
+### 3) Catálogo Público (Não requer autenticação)
 
-**Resposta de Sucesso:** Mesmo formato que POST /products.
+#### GET /api/public/catalog
+Lista produtos públicos (todas as ONGs) com filtros e paginação.
 
-#### PUT /products/:id
-**Descrição:** Atualiza um produto existente.
+Query params (opcionais): `page`, `limit`, `category`, `priceMin`, `priceMax`.
 
-**Parâmetros de URL:**
-- `id`: string (ID do produto)
-
-**Corpo da Requisição:** (todos os campos são opcionais)
-```json
-{
-  "name": "string (opcional)",
-  "description": "string (opcional)",
-  "price": "number (opcional)",
-  "categoryId": "number (opcional)",
-  "imageUrl": "string (opcional)",
-  "stockQty": "number (opcional)",
-  "weightGrams": "number (opcional)"
-}
-```
-
-**Resposta de Sucesso:** Mesmo formato que POST /products.
-
-#### DELETE /products/:id
-**Descrição:** Remove um produto.
-
-**Parâmetros de URL:**
-- `id`: string (ID do produto)
-
-**Resposta de Sucesso:**
-```json
-{
-  "success": true,
-  "data": null
-}
-```
-
-### 3. Catálogo Público
-
-#### GET /public/catalog
-**Descrição:** Lista produtos públicos de todas as ONGs com filtros e paginação.
-
-**Parâmetros de Query (todos opcionais):**
-- `page`: number (página, padrão: 1)
-- `limit`: number (itens por página, máximo: 100, padrão: 20)
-- `category`: string (filtro por categoria)
-- `priceMin`: number (preço mínimo)
-- `priceMax`: number (preço máximo)
-
-**Resposta de Sucesso:**
-```json
-{
-  "success": true,
-  "data": {
-    "products": [
-      {
-        "id": "string",
-        "name": "string",
-        "description": "string",
-        "price": 10.99,
-        "categoryId": 1,
-        "imageUrl": "http://example.com/image.jpg",
-        "stockQty": 100,
-        "weightGrams": 500,
-        "organizationId": "string",
-        "createdAt": "2025-11-03T00:00:00.000Z"
-      }
-    ],
-    "total": 50,
-    "page": 1,
-    "limit": 20
-  }
-}
-```
-
-**Exemplo:**
+Exemplo:
 ```bash
-curl "http://localhost:3000/public/catalog?page=1&limit=10&category=Doce&priceMin=5&priceMax=20"
+curl "http://localhost:3000/api/public/catalog?page=1&limit=10&category=Doce&priceMin=5&priceMax=20"
 ```
 
-### 4. Busca Inteligente (Requer Autenticação)
+### 4) Busca Inteligente (Não requer autenticação)
 
-#### GET /public/search
-**Descrição:** Realiza busca inteligente por linguagem natural usando IA.
+#### GET /api/public/search
+Busca em linguagem natural usando IA (Gemini 2.5 Flash‑Lite). Se a IA falhar/expirar, aplica fallback de texto.
 
-**Parâmetros de Query:**
-- `q`: string (termo de busca em linguagem natural)
+Query:
+- `q`: termo de busca
 
-**Resposta de Sucesso:**
+Resposta (IA usada):
 ```json
 {
   "success": true,
   "data": {
-    "interpretation": "Interpretação da busca em linguagem natural",
-    "aiUsed": true,
-    "fallbackApplied": false,
-    "data": [
-      {
-        "id": "string",
-        "name": "string",
-        "description": "string",
-        "price": 10.99,
-        "categoryId": 1,
-        "imageUrl": "http://example.com/image.jpg",
-        "stockQty": 100,
-        "weightGrams": 500,
-        "organizationId": "string",
-        "createdAt": "2025-11-03T00:00:00.000Z"
-      }
-    ]
+    "interpretation": "Buscando por:, Termo='doces', Preço Máx.='20'",
+    "ai_used": true,
+    "fallback_applied": false,
+    "data": [ { "id": 1, "name": "..." } ]
   }
 }
 ```
 
-**Exemplo:**
-```bash
-curl "http://localhost:3000/public/search?q=doces até 20 reais"
-```
-
-### 6. Organizações (Requer Autenticação)
-
-#### POST /organizations/:id/users
-**Descrição:** Cria um novo usuário dentro da organização especificada. Apenas administradores da organização podem criar usuários.
-
-**Parâmetros de URL:**
-- `id`: number (ID da organização)
-
-**Corpo da Requisição:**
-```json
-{
-  "name": "string",
-  "email": "string",
-  "password": "string",
-  "role": "string (opcional, padrão: 'user')" // 'user' ou 'admin'
-}
-```
-
-**Resposta de Sucesso:**
+Resposta (fallback aplicado):
 ```json
 {
   "success": true,
   "data": {
-    "id": 1,
-    "name": "Nome do Usuário",
-    "email": "usuario@example.com",
-    "role": "user",
-    "organizationId": 1
+    "interpretation": "Buscando por texto: \"doces até 20 reais\"",
+    "ai_used": false,
+    "fallback_applied": true,
+    "data": []
   }
 }
 ```
 
-**Códigos de Erro:**
-- `400`: Dados inválidos (validação Zod)
-- `403`: Operação não permitida para esta organização (multi-tenancy)
-- `409`: Usuário já existe com este email
+Notas:
+- Timeout do LLM é configurável via `LLM_TIMEOUT` (padrão: 5000 ms).
+- Os campos de flags retornam em snake_case (`ai_used`, `fallback_applied`).
 
-**Exemplo:**
+Exemplo:
 ```bash
-curl -X POST http://localhost:3000/organizations/1/users \
+curl "http://localhost:3000/api/public/search?q=doces%20até%2020%20reais"
+```
+
+### 5) Organizações (Requer Autenticação)
+
+#### POST /api/organizations
+Cria organização (pode criar admin opcionalmente).
+
+#### PATCH /api/organizations/:id
+Atualiza organização (somente a própria organização pode alterar).
+
+#### DELETE /api/organizations/:id
+Remove organização (restrito à própria organização).
+
+#### POST /api/organizations/:id/users
+Cria usuário dentro da organização (requer admin da própria organização).
+
+Exemplo:
+```bash
+curl -X POST http://localhost:3000/api/organizations/1/users \
   -H "Authorization: Bearer <jwt_token>" \
   -H "Content-Type: application/json" \
   -d '{"name": "João Silva", "email": "joao@example.com", "password": "senha123", "role": "user"}'
 ```
 
-### 7. Pedidos (Requer Autenticação)
+### 6) Pedidos (Requer Autenticação)
 
-#### POST /orders
-**Descrição:** Cria um novo pedido.
+#### POST /api/orders
+Cria um novo pedido.
 
-**Corpo da Requisição:**
-```json
-{
-  "customerId": "number (opcional)",
-  "items": [
-    {
-      "productId": "number",
-      "quantity": "number"
-    }
-  ]
-}
-```
+#### GET /api/orders
+Lista pedidos da organização.
 
-**Resposta de Sucesso:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "customerId": 123,
-    "items": [
-      {
-        "id": 1,
-        "orderId": 1,
-        "productId": 456,
-        "quantity": 5,
-        "priceAtTime": 10.99,
-        "organizationId": "org-123",
-        "createdAt": "2025-11-03T00:00:00.000Z",
-        "product": {
-          "id": 456,
-          "name": "Produto Exemplo",
-          "price": 10.99
-        }
-      }
-    ],
-    "total": 54.95,
-    "createdAt": "2025-11-03T00:00:00.000Z"
-  }
-}
-```
+#### GET /api/orders/:id
+Obtém um pedido por ID.
 
-#### GET /orders
-**Descrição:** Lista todos os pedidos da organização.
+### 7) Categorias
 
-**Resposta de Sucesso:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "customerId": 123,
-      "items": [
-        {
-          "id": 1,
-          "orderId": 1,
-          "productId": 456,
-          "quantity": 5,
-          "priceAtTime": 10.99,
-          "organizationId": "org-123",
-          "createdAt": "2025-11-03T00:00:00.000Z",
-          "product": {
-            "id": 456,
-            "name": "Produto Exemplo",
-            "price": 10.99
-          }
-        }
-      ],
-      "total": 54.95,
-      "createdAt": "2025-11-03T00:00:00.000Z"
-    }
-  ]
-}
-```
+#### GET /api/categories
+Lista categorias disponíveis.
 
-#### GET /orders/:id
-**Descrição:** Obtém um pedido específico por ID.
-
-**Parâmetros de URL:**
-- `id`: number (ID do pedido)
-
-**Resposta de Sucesso:** Mesmo formato que POST /orders.
-
-### 8. Categorias
-
-#### GET /categories
-**Descrição:** Lista todas as categorias disponíveis.
-
-**Resposta de Sucesso:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "name": "Doce",
-      "createdAt": "2025-11-03T00:00:00.000Z"
-    }
-  ]
-}
-```
-
-**Exemplo:**
+Exemplo:
 ```bash
-curl http://localhost:3000/categories
+curl http://localhost:3000/api/categories
 ```
 
-### 9. Dashboard (Requer Autenticação)
+### 8) Dashboard (Requer Autenticação)
 
-#### GET /dashboard/stats
-**Descrição:** Obtém estatísticas completas do dashboard da organização autenticada.
+#### GET /api/dashboard/stats
+Obtém estatísticas agregadas.
 
-**Resposta de Sucesso:**
-```json
-{
-  "success": true,
-  "data": {
-    "totalProducts": 25,
-    "totalOrganizations": 1,
-    "totalCategories": 5,
-    "totalInventoryValue": 15750.50,
-    "averageProductPrice": 35.75,
-    "totalStockQuantity": 450,
-    "productsByCategory": [
-      {
-        "category": "Doces",
-        "count": 10,
-        "percentage": 40.0
-      },
-      {
-        "category": "Salgados",
-        "count": 8,
-        "percentage": 32.0
-      }
-    ],
-    "productsByOrganization": [
-      {
-        "organization": "ONG Exemplo",
-        "count": 25,
-        "stock": 450
-      }
-    ],
-    "recentProducts": [
-      {
-        "id": 123,
-        "name": "Brigadeiro Gourmet",
-        "price": 15.99,
-        "category": "Doces",
-        "organization": "ONG Exemplo",
-        "createdAt": "2025-01-11T10:30:00.000Z"
-      }
-    ],
-    "searchMetrics": {
-      "totalSearches": 150,
-      "aiUsageRate": 85.5,
-      "fallbackRate": 12.3,
-      "averageLatency": 245.8
-    }
-  }
-}
-```
-
-**Exemplo:**
+Exemplo:
 ```bash
-curl -H "Authorization: Bearer <jwt_token>" http://localhost:3000/dashboard/stats
+curl -H "Authorization: Bearer <jwt_token>" http://localhost:3000/api/dashboard/stats
 ```
 
-#### GET /dashboard/activities
-**Descrição:** Obtém atividades recentes da organização autenticada.
+#### GET /api/dashboard/activities
+Obtém atividades recentes.
 
-**Resposta de Sucesso:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "product_123",
-      "user": "Sistema",
-      "action": "adicionou",
-      "target": "Brigadeiro Gourmet",
-      "timestamp": "2025-01-11T10:30:00.000Z",
-      "icon": "package",
-      "type": "product"
-    },
-    {
-      "id": "search_456",
-      "user": "Usuário",
-      "action": "pesquisou",
-      "target": "doces até 20 reais",
-      "timestamp": "2025-01-11T09:15:00.000Z",
-      "icon": "search",
-      "type": "search"
-    }
-  ]
-}
-```
-
-**Exemplo:**
+Exemplo:
 ```bash
-curl -H "Authorization: Bearer <jwt_token>" http://localhost:3000/dashboard/activities
+curl -H "Authorization: Bearer <jwt_token>" http://localhost:3000/api/dashboard/activities
 ```
 
-### 10. Health Check
+### 9) Health Check
 
-#### GET /health
-**Descrição:** Verifica o status da aplicação.
+#### GET /api/health
+Verifica o status da aplicação.
 
-**Resposta de Sucesso:**
-```json
-{
-  "status": "ok"
-}
-```
-
-**Exemplo:**
+Exemplo:
 ```bash
-curl http://localhost:3000/health
+curl http://localhost:3000/api/health
 ```
 
 ## Códigos de Status HTTP
@@ -558,13 +261,12 @@ curl http://localhost:3000/health
 - `201`: Criado
 - `400`: Requisição inválida
 - `401`: Não autorizado
-- `404`: Não encontradontrado
+- `404`: Não encontrado
 - `500`: Erro interno do servidor
 
 ## Convenções
 
-- Todos os campos JSON usam **camelCase**
-- Autenticação obrigatória para endpoints não públicos
-- Respostas seguem formato padronizado `ApiResponse<T>`
-- Timeout de 3 segundos para chamadas de IA</content>
-<parameter name="filePath">/home/vinicius/Downloads/estudo/projetos-testes/fullstack-junior-ia/api-ong/docs/api-endpoints.md
+- Todos os campos JSON usam camelCase (exceto os campos específicos da busca inteligente que atualmente retornam `ai_used` e `fallback_applied`).
+- Autenticação obrigatória para endpoints não públicos.
+- Respostas seguem formato padronizado `ApiResponse<T>`.
+- Timeout da IA configurável via `LLM_TIMEOUT` (padrão atual: 5000 ms).

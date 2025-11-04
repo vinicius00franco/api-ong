@@ -44,7 +44,7 @@ describe('AuthService', () => {
 
   it('should return access token for valid credentials', async () => {
     const loginRequest = { email: 'test@example.com', password: 'password123' };
-    const organization = { id: 'org1', passwordHash: 'hashed_password' };
+    const organization = { id: 1, uuid: 'uuid-org1', passwordHash: 'hashed_password' };
     const token = 'jwt-token';
 
     authRepository.findOrganizationByEmail.mockResolvedValue(organization);
@@ -53,13 +53,13 @@ describe('AuthService', () => {
 
     const result = await service.login(loginRequest);
 
-    expect(result).toEqual({ accessToken: token, organizationId: 'org1' });
+    expect(result).toEqual({ accessToken: token, organizationUuid: 'uuid-org1' });
     expect(authRepository.findOrganizationByEmail).toHaveBeenCalledWith('test@example.com');
     expect(bcrypt.compare).toHaveBeenCalledWith('password123', 'hashed_password');
     expect(jwtService.sign).toHaveBeenCalledWith({
-      sub: 'org1',
+      sub: '1',
       email: 'test@example.com',
-      organizationId: 'org1',
+      organizationId: 'uuid-org1',
     });
   });
 
@@ -73,7 +73,7 @@ describe('AuthService', () => {
 
   it('should throw UnauthorizedException for invalid password', async () => {
     const loginRequest = { email: 'test@example.com', password: 'wrongpassword' };
-    const organization = { id: 'org1', passwordHash: 'hashed_password' };
+    const organization = { id: 1, uuid: 'uuid-org1', passwordHash: 'hashed_password' };
 
     authRepository.findOrganizationByEmail.mockResolvedValue(organization);
     (bcrypt.compare as jest.Mock).mockResolvedValue(false);

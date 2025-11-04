@@ -10,6 +10,13 @@ import { DashboardStats, ActivityItem } from './dashboardTypes';
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
+  @Get()
+  @HandleErrors()
+  async getDashboard(@Request() req: any): Promise<ApiResponse<DashboardStats>> {
+    const data = await this.dashboardService.getStats(req.organizationId);
+    return ApiResponse.success(data);
+  }
+
   @Get('stats')
   @HandleErrors()
   async stats(@Request() req: any): Promise<ApiResponse<DashboardStats>> {

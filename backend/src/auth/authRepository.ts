@@ -5,22 +5,23 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthRepository implements IAuthRepository {
-  async findOrganizationByEmail(email: string): Promise<{ id: string; passwordHash: string } | null> {
-    const query = 'SELECT id, password_hash FROM organizations WHERE email = $1';
+  async findOrganizationByEmail(email: string): Promise<{ id: number; uuid: string; passwordHash: string } | null> {
+    const query = 'SELECT id, uuid, password_hash FROM organizations WHERE email = $1';
     const result = await getDb().query(query, [email]);
     if (!result.rows[0]) return null;
     return {
       id: result.rows[0].id,
+      uuid: result.rows[0].uuid,
       passwordHash: result.rows[0].password_hash,
     };
   }
 
-  async createOrganization(name: string, email: string, password: string): Promise<{ id: number; name: string; email: string }> {
+  async createOrganization(name: string, email: string, password: string): Promise<{ id: number; uuid: string; name: string; email: string }> {
     const hashedPassword = await bcrypt.hash(password, 10);
     const query = `
       INSERT INTO organizations (name, email, password_hash)
       VALUES ($1, $2, $3)
-      RETURNING id, name, email
+      RETURNING id, uuid, name, email
     `;
     const result = await getDb().query(query, [name, email, hashedPassword]);
     return result.rows[0];

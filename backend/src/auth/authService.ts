@@ -23,20 +23,20 @@ export class AuthService {
     }
 
     const payload: JWTPayload = {
-      sub: organization.id,
+      sub: organization.id.toString(),
       email: loginRequest.email,
-      organizationId: organization.id,
+      organizationId: organization.uuid,
     };
 
     const accessToken = this.jwtService.sign(payload);
 
     return {
       accessToken,
-      organizationId: organization.id,
+      organizationUuid: organization.uuid,
     };
   }
 
-  async register(registerData: { name: string; email: string; password: string }): Promise<{ id: number; name: string; email: string }> {
+  async register(registerData: { name: string; email: string; password: string }): Promise<{ id: number; uuid: string; name: string; email: string }> {
     // Check if organization already exists
     const existingOrg = await this.authRepository.findOrganizationByEmail(registerData.email);
     if (existingOrg) {
