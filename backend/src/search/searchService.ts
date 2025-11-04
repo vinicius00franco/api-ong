@@ -64,27 +64,53 @@ export class SearchService {
       return this.formatFallbackResponse(query, products);
     }
 
-    const fallbackApplied = false;
+    let fallbackApplied = false;
     this.logSearchEvent(query, aiFilters, aiSuccess, fallbackApplied);
 
-    const products = await this.repository.findByFilters(aiFilters as IAIFilters);
+    this.logger.log(
+      JSON.stringify({ message: 'AI filters applied. Querying DB with filters', filters: aiFilters }),
+    );
+    let products = await this.repository.findByFilters(aiFilters as IAIFilters);
+
+    // If AI-based filter search returned zero results, try a graceful fallback using the text term
+    if ((!products || products.length === 0) && (aiFilters as IAIFilters).search_term) {
+      const term = (aiFilters as IAIFilters).search_term as string;
+      this.logger.log(
+        JSON.stringify({ message: 'AI returned zero results. Applying text fallbacks with term', term }),
+      );
+      fallbackApplied = true;
+
+      let fbResults = await this.repository.findByTextFullText(term);
+      this.logger.log(
+        JSON.stringify({ message: 'AI->Full-text fallback result', term, count: fbResults.length }),
+      );
+      if (!fbResults || fbResults.length === 0) {
+        fbResults = await this.repository.findByText(term);
+        this.logger.log(
+          JSON.stringify({ message: 'AI->ILIKE fallback result', term, count: fbResults.length }),
+        );
+      }
+      if (fbResults && fbResults.length > 0) {
+        products = fbResults;
+      }
+    }
+
     const latencyMs = Date.now() - startTime;
-    
     await this.metrics.trackSearch({
       query,
       aiUsed: true,
-      fallbackApplied: false,
+      fallbackApplied,
       resultsCount: products.length,
       latencyMs,
       userId,
     });
-    
-    return this.formatSmartResponse(query, aiFilters as IAIFilters, products);
+
+    return this.formatSmartResponse(query, aiFilters as IAIFilters, products, fallbackApplied);
   }
 
   private areFiltersInsufficient(filters: IAIFilters | null): boolean {
     if (!filters) return true;
-    return !filters.category && filters.price_min === undefined && filters.price_max === undefined;
+    return !filters.search_term && !filters.category && filters.price_min === undefined && filters.price_max === undefined;
   }
 
   private formatFallbackResponse(query: string, products: any[]): ISearchResponse {
@@ -96,7 +122,12 @@ export class SearchService {
     };
   }
 
-  private formatSmartResponse(originalQuery: string, filters: IAIFilters, products: any[]): ISearchResponse {
+  private formatSmartResponse(
+    originalQuery: string,
+    filters: IAIFilters,
+    products: any[],
+    fallbackApplied = false,
+  ): ISearchResponse {
     const parts: string[] = ['Buscando por:'];
     if (filters.search_term) parts.push(`Termo='${filters.search_term}'`);
     if (filters.category) parts.push(`Categoria='${filters.category}'`);
@@ -107,7 +138,7 @@ export class SearchService {
     return {
       interpretation,
       ai_used: true,
-      fallback_applied: false,
+      fallback_applied: fallbackApplied,
       data: products,
     };
   }
