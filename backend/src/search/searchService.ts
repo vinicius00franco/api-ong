@@ -22,9 +22,36 @@ export class SearchService {
     if (!aiSuccess || this.areFiltersInsufficient(aiFilters)) {
       const fallbackApplied = true;
       this.logSearchEvent(query, aiFilters, aiSuccess, fallbackApplied);
-      const products = await this.repository.findByTextFullText(query);
-      const latencyMs = Date.now() - startTime;
       
+      this.logger.log(JSON.stringify({ message: 'Starting fallback search', query }));
+      let products = await this.repository.findByTextFullText(query);
+      this.logger.log(JSON.stringify({ message: 'Full-text search result', count: products.length }));
+
+      if (!products || products.length === 0) {
+        this.logger.log(JSON.stringify({ message: 'Trying ILIKE fallback', query }));
+        products = await this.repository.findByText(query);
+        this.logger.log(JSON.stringify({ message: 'ILIKE search result', count: products.length }));
+
+        if (!products || products.length === 0) {
+          const tokens = (query || '').toLowerCase().match(/[A-Za-zÀ-ÖØ-öø-ÿ]+/g) || [];
+          this.logger.log(JSON.stringify({ message: 'Tokenized fallback', tokens }));
+          const aggregated: Record<number, any> = {};
+          for (const t of tokens) {
+            if (t.length < 3) continue;
+            const partial = await this.repository.findByText(t);
+            this.logger.log(JSON.stringify({ message: 'Token search', token: t, found: partial.length }));
+            for (const p of partial) {
+              aggregated[p.id] = p;
+            }
+            if (Object.keys(aggregated).length > 0) break;
+          }
+          products = Object.values(aggregated);
+          this.logger.log(JSON.stringify({ message: 'Final aggregated', count: products.length }));
+        }
+      }
+
+      const latencyMs = Date.now() - startTime;
+
       await this.metrics.trackSearch({
         query,
         aiUsed: false,
@@ -33,7 +60,7 @@ export class SearchService {
         latencyMs,
         userId,
       });
-      
+
       return this.formatFallbackResponse(query, products);
     }
 

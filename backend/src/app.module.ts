@@ -1,5 +1,6 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/authModule';
 import { ProductModule } from './products/productModule';
@@ -16,6 +17,7 @@ import { RateLimitMiddleware } from './middleware/rateLimitMiddleware';
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    HttpModule,
     HealthModule,
     AuthModule,
     ProductModule,

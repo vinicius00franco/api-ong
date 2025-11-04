@@ -24,6 +24,7 @@ export class LlmApiService {
           timeout(this.LLM_TIMEOUT),
           catchError((error) => {
             this.logger.warn(`LLM API falhou ou excedeu timeout: ${error?.message || error}`);
+            this.logger.warn(`Error details: ${JSON.stringify(error)}`);
             return of(null as any);
           }),
         );

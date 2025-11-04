@@ -25,6 +25,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      llm-api:
+        condition: service_started
     # Carrega variáveis de ambiente a partir do arquivo .env (raiz do repo)
     env_file:
       - ./.env

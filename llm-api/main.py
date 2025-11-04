@@ -90,7 +90,7 @@ def create_app() -> FastAPI:
     # ========== SETUP DEPENDÊNCIAS ==========
 
     # 1. LLM Model (Dependency)
-    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest")
+    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite")
     logger.info("✓ LLM Model inicializado")
     global structured_llm
     structured_llm = llm.with_structured_output(FiltrosBusca)

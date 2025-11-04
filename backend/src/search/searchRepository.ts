@@ -16,7 +16,12 @@ export class SearchRepository implements ISearchRepository {
       SELECT p.id, p.name, p.description, p.price, c.name as category, p.image_url, p.stock_qty, p.weight_grams, p.organization_id
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
-      WHERE (p.name ILIKE $1 OR p.description ILIKE $1)
+      WHERE (
+        p.name ILIKE $1 OR p.description ILIKE $1 OR c.name ILIKE $1
+        OR unaccent(p.name) ILIKE unaccent($1)
+        OR unaccent(p.description) ILIKE unaccent($1)
+        OR unaccent(c.name) ILIKE unaccent($1)
+      )
       ORDER BY p.id DESC
     `;
     const params = [`%${term}%`];
